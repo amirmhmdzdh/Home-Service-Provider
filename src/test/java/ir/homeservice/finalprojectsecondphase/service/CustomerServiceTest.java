@@ -1,0 +1,216 @@
+package ir.homeservice.finalprojectsecondphase.service;
+
+import ir.homeservice.finalprojectsecondphase.exception.*;
+import ir.homeservice.finalprojectsecondphase.model.address.Address;
+import ir.homeservice.finalprojectsecondphase.model.offer.Offer;
+import ir.homeservice.finalprojectsecondphase.model.order.Orders;
+import ir.homeservice.finalprojectsecondphase.model.order.enums.OrderStatus;
+import ir.homeservice.finalprojectsecondphase.model.service.SubService;
+import ir.homeservice.finalprojectsecondphase.model.user.Customer;
+import ir.homeservice.finalprojectsecondphase.model.user.enums.Role;
+import org.junit.jupiter.api.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+
+import java.time.LocalDateTime;
+import java.util.NoSuchElementException;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+@SpringBootTest
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+class CustomerServiceTest {
+    @Autowired
+    private CustomerService customerService;
+    @Autowired
+    private SubServiceService subServiceService;
+    @Autowired
+    private OrderService orderService;
+    @Autowired
+    private OfferService offerService;
+
+    //-------------------------------SignUP & SignIn Customer-----------------------------------------------------------
+    @Test
+    @Order(1)
+    void signUpCustomer() {
+        Customer customer = Customer.builder()
+                .firstName("hassan")
+                .lastName("hassani")
+                .email("hassanii@gmail.com")
+                .password("ASvSD@#423")
+                .registrationTime(LocalDateTime.now())
+                .role(Role.CUSTOMER)
+                .credit(10000L)
+                .build();
+        customerService.signUpCustomer(customer);
+        Optional<Customer> findEmail = customerService.findByEmail("hassanii@gmail.com");
+        Address address = new Address("Tehran", "varamin", "koche1", "asa12", findEmail.get());
+        customerService.addAddress(address, findEmail.get());
+        Assertions.assertTrue(findEmail.isPresent());
+        Assertions.assertEquals(customer.getEmail(), findEmail.get().getEmail());
+    }
+
+    @Test
+    @Order(2)
+    void signUpDuplicatedCustomer() {
+        Customer customer = Customer.builder()
+                .firstName("ali")
+                .lastName("mhmdzdh")
+                .email("AliMhmd@gmail.com")
+                .password("ASvSD@#423")
+                .registrationTime(LocalDateTime.now())
+                .role(Role.CUSTOMER)
+                .credit(10000L)
+                .build();
+        Assertions.assertThrows(DuplicateEmailException.class, () -> {
+            customerService.signUpCustomer(customer);
+        });
+
+    }
+
+    @Test
+    @Order(3)
+    void signInCustomer() {
+        String email = "AliMhmd@gmail.com";
+        String pass = "ASvSD@#423";
+        Customer customer = customerService.signInCustomer(email, pass);
+        Assertions.assertEquals(email, customer.getEmail());
+        Assertions.assertEquals(pass, customer.getPassword());
+    }
+
+    @Test
+    @Order(4)
+    void signInCustomerWithIncorrectInfo() {
+        String email = "AliMhmd@gmail.com";
+        String pass = "ASvSD@#4234";
+        assertThrows(CustomerStatusException.class, () -> {
+            customerService.signInCustomer(email, pass);
+        });
+    }
+
+    //-----------------------------------change Password -------------------------------------------------------------------
+    @Test
+    @Order(5)
+    void changePassword() {
+        customerService.changePassword("AliMhmd@gmail.com", "ASvSD@#423", "ASvSD@#13801125");
+        Optional<Customer> customer = customerService.findByEmail("AliMhmd@gmail.com");
+        Assertions.assertEquals(customer.get().getPassword(), "ASvSD@#13801125");
+    }
+
+    @Test
+    @Order(6)
+    void incorrectInfo() {
+        Assertions.assertThrows(DuplicateEmailException.class, () -> {
+            customerService.changePassword("weq@gmail.com", "12345!qQwe", "12345!qQ12");
+        });
+    }
+
+    //------------------------------------watch And Order-------------------------------------------------------------------
+    @Test
+    @Order(7)
+    void watchAndOrder() {
+        Customer customer = customerService.findByEmail("AliMhmd@gmail.com").get();
+        SubService subService = subServiceService.findByName("barge").get();
+
+        Orders orders = Orders.builder()
+                .orderStatus(OrderStatus.WAITING_FOR_SPECIALIST_SUGGESTION)
+                .proposedPrice(150L)
+                .customer(customer)
+                .executionTime(LocalDateTime.of(2025, 12, 12, 12, 12))
+                .endTime(LocalDateTime.of(2025, 12, 19, 12, 12))
+                .subServices(subService)
+                .address(customer.getAddressList().get(0))
+                .description("testOrder")
+                .build();
+        customerService.watchAndOrder(orders, customer.getId());
+        Assertions.assertEquals(
+                orderService.findByCustomerEmailAndOrderStatus("AliMhmd@gmail.com",
+                        OrderStatus.WAITING_FOR_SPECIALIST_SUGGESTION).get(0).getDescription(), "testOrder");
+    }
+
+    @Test
+    @Order(8)
+    void watchAndOrderWithFakeCustomer() {
+        Customer customer = Customer.builder().id(5L).build();
+        SubService subService = SubService.builder().id(1L).build();
+        Orders orders = Orders.builder()
+                .orderStatus(OrderStatus.WAITING_FOR_SPECIALIST_SUGGESTION)
+                .proposedPrice(150L)
+                .customer(customer)
+                .executionTime(LocalDateTime.of(2025, 12, 12, 12, 12))
+                .endTime(LocalDateTime.of(2025, 12, 19, 12, 12))
+                .subServices(subService)
+                .description("testOrder")
+                .build();
+        Assertions.assertThrows(CustomerStatusException.class, () -> {
+            customerService.watchAndOrder(orders, customer.getId());
+        });
+    }
+    @Test
+    @Order(9)
+    void watchAndOrderWithFakeInfo() {
+        Customer customer = Customer.builder().id(1L).build();
+        SubService subService = SubService.builder().id(10L).name("hava").build();
+        Orders orders = Orders.builder()
+                .orderStatus(OrderStatus.WAITING_FOR_SPECIALIST_SUGGESTION)
+                .proposedPrice(150L)
+                .customer(customer)
+                .executionTime(LocalDateTime.of(2025, 12, 12, 12, 12))
+                .endTime(LocalDateTime.of(2025, 12, 19, 12, 12))
+                .subServices(subService)
+                .description("testOrder")
+                .build();
+        Assertions.assertThrows(SubServicesIsNotExistException.class, () -> {
+            customerService.watchAndOrder(orders, customer.getId());
+        });
+    }
+
+    //----------------------------------trackOrders-------------------------------------------------------------------------
+    @Test
+    @Order(9)
+    void newTrackOrders() {
+        Customer customer = customerService.findByEmail("weqw@gmail.com").get();
+        Long id = offerService.findAll().get(0).getId();
+        customerService.trackOrders(id, customer);
+        Optional<Offer> optionalOffer = offerService.findById(id);
+        Assertions.assertEquals(OrderStatus.WAITING_FOR_SPECIALIST_TO_COME,
+                optionalOffer.get().getOrders().getOrderStatus());
+
+
+    }
+
+    @Test
+    @Order(10)
+    void trackOrdersWithExist() {
+        Assertions.assertThrows(OfferNotExistException.class, () -> {
+            Customer customer = customerService.findByEmail("weqw@gmail.com").get();
+            Long id = offerService.findAll().get(0).getId();
+            customerService.trackOrders(id, customer);
+            Optional<Offer> optionalOffer = offerService.findById(id);
+            Assertions.assertEquals(OrderStatus.WAITING_FOR_SPECIALIST_TO_COME,
+                    optionalOffer.get().getOrders().getOrderStatus());
+        });
+    }
+
+    //--------------------------------notificationOfStatus------------------------------------------------------------------
+    @Test
+    @Order(11)
+    void notificationOfStatus() {
+        Customer customer = customerService.findByEmail("weqw@gmail.com").get();
+        Long id = orderService.findAll().get(12).getId();
+        customerService.notificationOfStatus(id, customer);
+        Assertions.assertEquals(orderService.findById(id).get().getOrderStatus(), OrderStatus.DONE);
+    }
+
+    @Test
+    @Order(12)
+    void orderIsNotExistException() {
+        Assertions.assertThrows(OrderIsNotExistException.class, () -> {
+            Customer customer = customerService.findByEmail("weqw@gmail.com").get();
+            Long id = orderService.findAll().get(12).getId();
+            customerService.notificationOfStatus(id, customer);
+            Assertions.assertEquals(orderService.findById(id).get().getOrderStatus(), OrderStatus.DONE);
+        });
+    }
+}
