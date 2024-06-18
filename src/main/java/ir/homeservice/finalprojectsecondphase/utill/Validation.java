@@ -48,26 +48,18 @@ public class Validation {
         return true;
     }
 
-    public byte[] checkImage(String imagePath) {
+    public byte[] checkImage(byte[] imagePath) {
         if (imagePath == null) {
             throw new ImageFormatException("The image is empty!");
         }
-
-        if (imagePath.matches(".*\\.(jpg|jpeg)$")) {
+        String imageString = new String(imagePath);
+        if (imageString.matches(".*\\.(jpg|jpeg)$")) {
             throw new ImageFormatException("Invalid file format. Only JPG and JPEG formats are supported.");
         }
-
-        byte[] imageData = null;
-        try {
-            imageData = Files.readAllBytes(Paths.get(imagePath));
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-        }
-
-        if (imageData != null && imageData.length > 300 * 1024) {
+        if (imagePath != null && imagePath.length > 300 * 1024) {
             throw new ImageFormatException("The size of the image exceeds the limit!");
         }
-        return imageData;
+        return imagePath;
     }
 
     public boolean checkOfferBelongToTheOrder(Long offerId, Customer customer) {
@@ -84,11 +76,13 @@ public class Validation {
             throw new OrderIsNotExistException("you are not the owner of this order");
         return true;
     }
+
     public void validatePrice(SubService subService, Orders order) {
         if (subService.getBasePrice() > order.getProposedPrice()) {
             throw new PriceException("The suggested price can be lower than the base price.");
         }
     }
+
     public void validateTime(Orders orders) {
         if (orders.getExecutionTime().isBefore(LocalDateTime.now())) {
             throw new TimeException("Execution time before current time");
@@ -98,11 +92,6 @@ public class Validation {
             throw new TimeException("End time before execution time");
         }
     }
-
-
-
-
-
 
 
 }
