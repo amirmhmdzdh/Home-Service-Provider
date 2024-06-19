@@ -7,15 +7,19 @@ import ir.homeservice.finalprojectsecondphase.model.order.Orders;
 import ir.homeservice.finalprojectsecondphase.model.order.enums.OrderStatus;
 import ir.homeservice.finalprojectsecondphase.model.service.SubService;
 import ir.homeservice.finalprojectsecondphase.model.user.Customer;
+import ir.homeservice.finalprojectsecondphase.model.user.Specialist;
 import ir.homeservice.finalprojectsecondphase.model.user.enums.Role;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
@@ -29,6 +33,8 @@ class CustomerServiceTest {
     private OrderService orderService;
     @Autowired
     private OfferService offerService;
+    @Autowired
+    private SpecialistService specialistService;
 
     //-------------------------------SignUP & SignIn Customer-----------------------------------------------------------
     @Test
@@ -147,6 +153,7 @@ class CustomerServiceTest {
             customerService.watchAndOrder(orders, customer.getId());
         });
     }
+
     @Test
     @Order(9)
     void watchAndOrderWithFakeInfo() {
@@ -167,44 +174,61 @@ class CustomerServiceTest {
     }
 
     //----------------------------------trackOrders-------------------------------------------------------------------------
+
     @Test
-    @Order(9)
+    @Order(10)
+    void findOfferListByProposedPrice() {
+        Customer customer = customerService.findByEmail("AliMhmd@gmail.com").get();
+        List<Offer> offerList =
+                customerService.findOfferListByProposedPrice(customer.getOrdersList().get(0).getId(), customer);
+        assertNotNull(offerList);
+    }
+
+    @Test
+    @Order(11)
+    void findOfferListBySpecialistScore() {
+        Customer customer = customerService.findByEmail("AliMhmd@gmail.com").get();
+        Specialist specialist = specialistService.findByEmail("AmirM.ah@yahoo.com").get();
+        specialist.setStar(8);
+        specialistService.save(specialist);
+        List<Offer> offerListBySpecialistScore = customerService
+                .findOfferListBySpecialistScore(customer.getOrdersList().get(0).getId(), customer);
+        assertNotNull(offerListBySpecialistScore);
+    }
+
+    @Test
+    @Order(12)
     void newTrackOrders() {
-        Customer customer = customerService.findByEmail("weqw@gmail.com").get();
-        Long id = offerService.findAll().get(0).getId();
+        Customer customer = customerService.findByEmail("AliMhmd@gmail.com").get();
+        Long id = 1L;
         customerService.trackOrders(id, customer);
         Optional<Offer> optionalOffer = offerService.findById(id);
         Assertions.assertEquals(OrderStatus.WAITING_FOR_SPECIALIST_TO_COME,
                 optionalOffer.get().getOrders().getOrderStatus());
-
-
     }
 
     @Test
-    @Order(10)
+    @Order(13)
     void trackOrdersWithExist() {
-        Assertions.assertThrows(OfferNotExistException.class, () -> {
-            Customer customer = customerService.findByEmail("weqw@gmail.com").get();
-            Long id = offerService.findAll().get(0).getId();
+        Customer customer = customerService.findByEmail("AliMhmd@gmail.com").get();
+        Long id = 1L;
+        Assertions.assertThrows(OfferStatusException.class, () -> {
             customerService.trackOrders(id, customer);
-            Optional<Offer> optionalOffer = offerService.findById(id);
-            Assertions.assertEquals(OrderStatus.WAITING_FOR_SPECIALIST_TO_COME,
-                    optionalOffer.get().getOrders().getOrderStatus());
         });
     }
 
     //--------------------------------notificationOfStatus------------------------------------------------------------------
     @Test
-    @Order(11)
+    @Order(14)
     void notificationOfStatus() {
-        Customer customer = customerService.findByEmail("weqw@gmail.com").get();
-        Long id = orderService.findAll().get(12).getId();
+        Customer customer = customerService.findByEmail("AliMhmd@gmail.com").get();
+        Long id = orderService.findAll().get(0).getId();
         customerService.notificationOfStatus(id, customer);
         Assertions.assertEquals(orderService.findById(id).get().getOrderStatus(), OrderStatus.DONE);
     }
 
     @Test
-    @Order(12)
+    @Order(15)
     void orderIsNotExistException() {
         Assertions.assertThrows(OrderIsNotExistException.class, () -> {
             Customer customer = customerService.findByEmail("weqw@gmail.com").get();

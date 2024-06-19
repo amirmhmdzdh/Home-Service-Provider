@@ -75,6 +75,7 @@ class SpecialistServiceTest {
             specialistService.signInSpecialist(email, password);
         });
     }
+
     @Test
     @Order(4)
     void signInSpecialist() {
@@ -86,33 +87,44 @@ class SpecialistServiceTest {
         Assertions.assertEquals(email, specialist.getEmail());
         Assertions.assertEquals(password, specialist.getPassword());
     }
+    //-----------------------------------change Password -------------------------------------------------------------------
+
     @Test
     @Order(5)
-    void changePassword(){
-
-
+    void changePassword() {
+        specialistService.changePassword("AmirM.ah@yahoo.com", "45#Po@iu", "45#Po@iuui");
+        Optional<Specialist> specialist = specialistService.findByEmail("AmirM.ah@yahoo.com");
+        assertEquals(specialist.get().getPassword(), "45#Po@iuui");
     }
 
+    @Test
+    @Order(6)
+    void incorrectInfo() {
+        Assertions.assertThrows(DuplicateEmailException.class, () -> {
+            specialistService.changePassword("AmirM.ah@yahoo.com", "45#Po@iu", "45#Po@iuui");
+        });
+    }
+    //-----------------------------------new Offers -------------------------------------------------------------------
 
     @Test
-    @Order(5)
+    @Order(6)
     void newOffer() {
         Offer offer = Offer.builder()
                 .executionTime(LocalDateTime.of(2026, 2, 2, 2, 2))
                 .endTime(LocalDateTime.of(2027, 3, 3, 3, 3))
                 .sendTime(LocalDateTime.now())
-                .proposedPrice(30000L)
+                .proposedPrice(350L)
                 .build();
-        Optional<Orders> ordersList = Optional.of(orderService.findAll().get(8));
+        Optional<Orders> ordersList = Optional.of(orderService.findAll().get(0));
         offer.setOrders(ordersList.get());
-        Optional<Specialist> specialist = specialistService.findByEmail("milad.ah@yahoo.com");
+        Optional<Specialist> specialist = specialistService.findByEmail("AmirM.ah@yahoo.com");
         offer.setSpecialist(specialist.get());
         specialistService.newOffers(offer, specialist.get());
-        assertEquals(1, offerService.findAll().size());
+        assertEquals(4, offerService.findAll().size());
     }
 
     @Test
-    @Order(6)
+    @Order(7)
     void newOfferWithSpecialistNew() {
         assertThrows(SpecialistNoAccessException.class, () -> {
             Offer offer = Offer.builder()
@@ -131,7 +143,7 @@ class SpecialistServiceTest {
     }
 
     @Test
-    @Order(7)
+    @Order(8)
     void newOfferWithOrderIsNull() {
         assertThrows(IndexOutOfBoundsException.class, () -> {
             Offer offer = Offer.builder()
@@ -150,7 +162,7 @@ class SpecialistServiceTest {
     }
 
     @Test
-    @Order(8)
+    @Order(9)
     void newOfferWithAccepted() {
         assertThrows(OrderStatusException.class, () -> {
             Offer offer = Offer.builder()
@@ -169,7 +181,7 @@ class SpecialistServiceTest {
     }
 
     @Test
-    @Order(9)
+    @Order(10)
     void newOfferWithSpecialistDontJob() {
         assertThrows(SpecialistNoAccessException.class, () -> {
             Offer offer = Offer.builder()
@@ -188,7 +200,7 @@ class SpecialistServiceTest {
     }
 
     @Test
-    @Order(10)
+    @Order(11)
     void newOfferAmountLessException() {
         assertThrows(AmountLessException.class, () -> {
             Offer offer = Offer.builder()
@@ -207,7 +219,7 @@ class SpecialistServiceTest {
     }
 
     @Test
-    @Order(11)
+    @Order(12)
     void newOfferTimeLessException() {
         assertThrows(TimeException.class, () -> {
             Offer offer = Offer.builder()
@@ -226,7 +238,7 @@ class SpecialistServiceTest {
     }
 
     @Test
-    @Order(12)
+    @Order(13)
     void newOfferTimeAfterException() {
         assertThrows(TimeException.class, () -> {
             Offer offer = Offer.builder()

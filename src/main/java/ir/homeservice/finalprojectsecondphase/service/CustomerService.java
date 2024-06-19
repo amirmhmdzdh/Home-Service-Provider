@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -100,13 +101,26 @@ public class CustomerService {
         addressService.createAddress(address);
     }
 
+    public List<Offer> findOfferListByProposedPrice(Long orderId, Customer customer) {
+        validation.checkPositiveNumber(orderId);
+        validation.checkOwnerOfTheOrder(orderId, customer);
+        return offerService.findOfferListByProposedPrice(orderId);
+    }
+
+    public List<Offer> findOfferListBySpecialistScore(Long orderId, Customer customer) {
+        validation.checkPositiveNumber(orderId);
+        validation.checkOwnerOfTheOrder(orderId, customer);
+        return offerService.findOfferListBySpecialistScore(orderId);
+    }
+
     public void trackOrders(Long offerId, Customer customer) {
         validation.checkPositiveNumber(offerId);
         validation.checkOfferBelongToTheOrder(offerId, customer);
         Optional<Offer> offer = offerService.findById(offerId);
-        if (offer.get().getOfferStatus().equals(OfferStatus.ACCEPTED))
+        Offer foundOffer = offer.get();
+        if (foundOffer.getOfferStatus().equals(OfferStatus.ACCEPTED))
             throw new OfferStatusException(" this offer already accepted");
-        orderService.chooseOffer(offer.get().getOrders(), offerId);
+        orderService.chooseOffer(foundOffer.getOrders(), offerId);
     }
 
     public void notificationOfStatus(Long orderId, Customer customer) {
