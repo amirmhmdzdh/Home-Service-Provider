@@ -66,13 +66,13 @@ public class AdminService {
         service.setName(upateSubService.getName());
         validation.checkText(upateSubService.getDescription());
         service.setDescription(upateSubService.getDescription());
-        validation.checkPositiveNumber(upateSubService.getBasePrice());
+        validation.checkNumber(upateSubService.getBasePrice());
         service.setBasePrice(upateSubService.getBasePrice());
         subServiceService.save(existingSubService.get());
     }
 
     public void confirmSpecialist(Long specialistId) {
-        validation.checkPositiveNumber(specialistId);
+        validation.checkNumber(specialistId);
         Specialist specialist = specialistService.findById(specialistId)
                 .orElseThrow(() -> new SpecialistIsNotExistException("This specialist does not exist!"));
         if (specialist.getStatus().equals(SpecialistStatus.CONFIRMED))
@@ -82,8 +82,8 @@ public class AdminService {
     }
 
     public void addSpecialistToSubService(Long subServiceId, Long specialistId) {
-        validation.checkPositiveNumber(subServiceId);
-        validation.checkPositiveNumber(specialistId);
+        validation.checkNumber(subServiceId);
+        validation.checkNumber(specialistId);
         SubService subService = subServiceService.findById(subServiceId)
                 .orElseThrow(() -> new SubServicesIsNotExistException("This subService does not exist!"));
         Specialist specialist = specialistService.findById(specialistId)
@@ -97,8 +97,8 @@ public class AdminService {
     }
 
     public void deleteSubServicesFromSpecialist(Long subServiceId, Long specialistId) {
-        validation.checkPositiveNumber(subServiceId);
-        validation.checkPositiveNumber(specialistId);
+        validation.checkNumber(subServiceId);
+        validation.checkNumber(specialistId);
         SubService subService = subServiceService.findById(subServiceId)
                 .orElseThrow(() -> new SubServicesIsNotExistException("This subService does not exist!"));
         Specialist specialist = specialistService.findById(specialistId)

@@ -45,7 +45,7 @@ public class CustomerService {
         validation.checkText(customer.getLastName());
         validation.checkEmail(customer.getEmail());
         validation.checkPassword(customer.getPassword());
-        validation.checkPositiveNumber(customer.getCredit());
+        validation.checkNumber(customer.getCredit());
         if (customerRepository.findByEmail(customer.getEmail()).isPresent())
             throw new DuplicateEmailException(customer.getEmail() + " is duplicate");
         customerRepository.save(insertCustomer);
@@ -82,7 +82,7 @@ public class CustomerService {
                 .orElseThrow(() -> new CustomerStatusException("Customer not found"));
         validation.validateTime(orders);
         validation.checkBlank(orders.getSubServices().getName());
-        validation.checkPositiveNumber(orders.getProposedPrice());
+        validation.checkNumber(orders.getProposedPrice());
         validation.checkBlank(orders.getDescription());
         SubService subService = subServiceService.findById(orders.getSubServices().getId())
                 .orElseThrow(() ->
@@ -102,19 +102,19 @@ public class CustomerService {
     }
 
     public List<Offer> findOfferListByProposedPrice(Long orderId, Customer customer) {
-        validation.checkPositiveNumber(orderId);
+        validation.checkNumber(orderId);
         validation.checkOwnerOfTheOrder(orderId, customer);
         return offerService.findOfferListByProposedPrice(orderId);
     }
 
     public List<Offer> findOfferListBySpecialistScore(Long orderId, Customer customer) {
-        validation.checkPositiveNumber(orderId);
+        validation.checkNumber(orderId);
         validation.checkOwnerOfTheOrder(orderId, customer);
         return offerService.findOfferListBySpecialistScore(orderId);
     }
 
     public void trackOrders(Long offerId, Customer customer) {
-        validation.checkPositiveNumber(offerId);
+        validation.checkNumber(offerId);
         validation.checkOfferBelongToTheOrder(offerId, customer);
         Optional<Offer> offer = offerService.findById(offerId);
         Offer foundOffer = offer.get();
@@ -124,7 +124,7 @@ public class CustomerService {
     }
 
     public void notificationOfStatus(Long orderId, Customer customer) {
-        validation.checkPositiveNumber(orderId);
+        validation.checkNumber(orderId);
         validation.checkOwnerOfTheOrder(orderId, customer);
         Optional<Orders> optionalOrders = orderService.findById(orderId);
         if (!optionalOrders.get().getOrderStatus().equals(OrderStatus.WAITING_FOR_SPECIALIST_TO_COME))

@@ -7,9 +7,6 @@ import ir.homeservice.finalprojectsecondphase.model.service.SubService;
 import ir.homeservice.finalprojectsecondphase.model.user.Customer;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.regex.Pattern;
 
@@ -28,7 +25,7 @@ public class Validation {
         return true;
     }
 
-    public boolean checkPositiveNumber(Long longDigit) {
+    public boolean checkNumber(Long longDigit) {
         if (longDigit <= 0)
             throw new PositiveNumberException("the number is not Valid");
         return true;
