@@ -1,6 +1,7 @@
 package ir.homeservice.finalprojectsecondphase.service;
 
 import ir.homeservice.finalprojectsecondphase.model.offer.Offer;
+import ir.homeservice.finalprojectsecondphase.model.offer.enums.OfferStatus;
 import ir.homeservice.finalprojectsecondphase.repository.OfferRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,5 +28,14 @@ public class OfferService {
     public Optional<Offer> findById(Long id) {
         return offerRepository.findById(id);
     }
+
+    public List<Offer> findOfferListByProposedPrice(Long orderId) {
+        return offerRepository.findOfferListByProposedPrice(orderId, OfferStatus.WAITING);
+    }
+    public List<Offer> findOfferListBySpecialistScore(Long orderId) {
+        return offerRepository.findOfferListBySpecialistScore(orderId,OfferStatus.WAITING);
+    }
+
+
 
 }
