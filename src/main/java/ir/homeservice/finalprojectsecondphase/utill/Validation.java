@@ -59,12 +59,25 @@ public class Validation {
         return imagePath;
     }
 
+    //    public boolean checkOfferBelongToTheOrder(Long offerId, Customer customer) {
+//        boolean[] exist = new boolean[1];
+//        customer.getOrdersList().forEach(order -> exist[0] = order.getOfferList().stream().filter(offer ->
+//                offer.getId().equals(offerId)).findFirst().isEmpty());
+//        if (exist[0])
+//            throw new OfferNotExistException("this offer not belong to your orders");
+//        return true;
+//    }
     public boolean checkOfferBelongToTheOrder(Long offerId, Customer customer) {
-        boolean[] exist = new boolean[1];
-        customer.getOrdersList().forEach(order -> exist[0] = order.getOfferList().stream().filter(offer ->
-                offer.getId().equals(offerId)).findFirst().isEmpty());
-        if (exist[0])
-            throw new OfferNotExistException("this offer not belong to your orders");
+        boolean exists = customer.getOrdersList()
+                .stream()
+                .anyMatch(order -> order.getOfferList()
+                        .stream()
+                        .anyMatch(offer -> offer.getId().equals(offerId)));
+
+        if (!exists) {
+            throw new OfferNotExistException("This offer does not belong to your orders.");
+        }
+
         return true;
     }
 

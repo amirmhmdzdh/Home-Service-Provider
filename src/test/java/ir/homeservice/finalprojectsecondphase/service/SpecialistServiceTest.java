@@ -59,7 +59,7 @@ class SpecialistServiceTest {
         String pathImage = "D:\\0.jpg";
         byte[] imageData = Files.readAllBytes(Paths.get(pathImage));
         Specialist specialist = Specialist.builder()
-                .firstName("Amir").lastName("mhmdzdh").role(Role.SPECIALIST).email("AmirM.ah@yahoo.com")
+                .firstName("haji").lastName("mhmdzdh").role(Role.SPECIALIST).email("hajiM.ah@yahoo.com")
                 .password("45#Po@iu").image(imageData).registrationTime(LocalDateTime.now())
                 .credit(0L).star(0).status(SpecialistStatus.NEW)
                 .build();
@@ -80,7 +80,7 @@ class SpecialistServiceTest {
     @Order(4)
     void signInSpecialist() {
         String email = "AmirM.ah@yahoo.com";
-        String password = "45#Po@iu";
+        String password = "45#Po@iup";
         Specialist specialist = specialistService.signInSpecialist(email, password);
         Assertions.assertEquals(email, specialist.getEmail());
         Assertions.assertEquals(password, specialist.getPassword());
@@ -90,9 +90,9 @@ class SpecialistServiceTest {
     @Test
     @Order(5)
     void changePassword() {
-        specialistService.changePassword("AmirM.ah@yahoo.com", "45#Po@iu", "45#Po@iuui");
+        specialistService.changePassword("AmirM.ah@yahoo.com", "45#Po@iuui", "45#Po@iup");
         Optional<Specialist> specialist = specialistService.findByEmail("AmirM.ah@yahoo.com");
-        assertEquals(specialist.get().getPassword(), "45#Po@iuui");
+        assertEquals(specialist.get().getPassword(), "45#Po@iup");
     }
 
     @Test
@@ -118,7 +118,7 @@ class SpecialistServiceTest {
         Optional<Specialist> specialist = specialistService.findByEmail("AmirM.ah@yahoo.com");
         offer.setSpecialist(specialist.get());
         specialistService.newOffers(offer, specialist.get());
-        assertEquals(4, offerService.findAll().size());
+        assertEquals(1, offerService.findAll().size());
     }
 
     @Test
@@ -133,7 +133,7 @@ class SpecialistServiceTest {
                     .build();
             Optional<Orders> ordersList = Optional.of(orderService.findAll().get(0));
             offer.setOrders(ordersList.get());
-            Optional<Specialist> specialist = specialistService.findByEmail("milad.ah@yahoo.com");
+            Optional<Specialist> specialist = specialistService.findByEmail("test2M.ah@yahoo.com");
             offer.setSpecialist(specialist.get());
             specialistService.newOffers(offer, specialist.get());
             assertEquals(1, offerService.findAll().size());
@@ -152,7 +152,7 @@ class SpecialistServiceTest {
                     .build();
             Optional<Orders> ordersList = Optional.of(orderService.findAll().get(200));
             offer.setOrders(ordersList.get());
-            Optional<Specialist> specialist = specialistService.findByEmail("milad.ah@yahoo.com");
+            Optional<Specialist> specialist = specialistService.findByEmail("test2M.ah@yahoo.com");
             offer.setSpecialist(specialist.get());
             specialistService.newOffers(offer, specialist.get());
             assertEquals(1, offerService.findAll().size());
@@ -169,9 +169,9 @@ class SpecialistServiceTest {
                     .sendTime(LocalDateTime.now())
                     .proposedPrice(30000L)
                     .build();
-            Optional<Orders> ordersList = Optional.of(orderService.findAll().get(200));
+            Optional<Orders> ordersList = Optional.of(orderService.findAll().get(0));
             offer.setOrders(ordersList.get());
-            Optional<Specialist> specialist = specialistService.findByEmail("Honewdey.ah@yahoo.com");
+            Optional<Specialist> specialist = specialistService.findByEmail("AmirM.ah@yahoo.com");
             offer.setSpecialist(specialist.get());
             specialistService.newOffers(offer, specialist.get());
             assertEquals(1, offerService.findAll().size());
@@ -181,16 +181,17 @@ class SpecialistServiceTest {
     @Test
     @Order(10)
     void newOfferWithSpecialistDontJob() {
+
+        Offer offer = Offer.builder()
+                .executionTime(LocalDateTime.of(2026, 2, 2, 2, 2))
+                .endTime(LocalDateTime.of(2027, 3, 3, 3, 3))
+                .sendTime(LocalDateTime.now())
+                .proposedPrice(30000L)
+                .build();
+        Optional<Orders> ordersList = Optional.of(orderService.findAll().get(0));
+        offer.setOrders(ordersList.get());
         assertThrows(SpecialistNoAccessException.class, () -> {
-            Offer offer = Offer.builder()
-                    .executionTime(LocalDateTime.of(2026, 2, 2, 2, 2))
-                    .endTime(LocalDateTime.of(2027, 3, 3, 3, 3))
-                    .sendTime(LocalDateTime.now())
-                    .proposedPrice(30000L)
-                    .build();
-            Optional<Orders> ordersList = Optional.of(orderService.findAll().get(0));
-            offer.setOrders(ordersList.get());
-            Optional<Specialist> specialist = specialistService.findByEmail("Honewdey.ah@yahoo.com");
+            Optional<Specialist> specialist = specialistService.findByEmail("AmirM.ah@yahoo.com");
             offer.setSpecialist(specialist.get());
             specialistService.newOffers(offer, specialist.get());
             assertEquals(1, offerService.findAll().size());
@@ -209,7 +210,7 @@ class SpecialistServiceTest {
                     .build();
             Optional<Orders> ordersList = Optional.of(orderService.findAll().get(0));
             offer.setOrders(ordersList.get());
-            Optional<Specialist> specialist = specialistService.findByEmail("amir.ah@yahoo.com");
+            Optional<Specialist> specialist = specialistService.findByEmail("AmirM.ah@yahoo.com");
             offer.setSpecialist(specialist.get());
             specialistService.newOffers(offer, specialist.get());
             assertEquals(1, offerService.findAll().size());
@@ -228,7 +229,7 @@ class SpecialistServiceTest {
                     .build();
             Optional<Orders> ordersList = Optional.of(orderService.findAll().get(0));
             offer.setOrders(ordersList.get());
-            Optional<Specialist> specialist = specialistService.findByEmail("amir.ah@yahoo.com");
+            Optional<Specialist> specialist = specialistService.findByEmail("AmirM.ah@yahoo.com");
             offer.setSpecialist(specialist.get());
             specialistService.newOffers(offer, specialist.get());
             assertEquals(1, offerService.findAll().size());
@@ -247,7 +248,7 @@ class SpecialistServiceTest {
                     .build();
             Optional<Orders> ordersList = Optional.of(orderService.findAll().get(0));
             offer.setOrders(ordersList.get());
-            Optional<Specialist> specialist = specialistService.findByEmail("amir.ah@yahoo.com");
+            Optional<Specialist> specialist = specialistService.findByEmail("AmirM.ah@yahoo.com");
             offer.setSpecialist(specialist.get());
             specialistService.newOffers(offer, specialist.get());
             assertEquals(1, offerService.findAll().size());

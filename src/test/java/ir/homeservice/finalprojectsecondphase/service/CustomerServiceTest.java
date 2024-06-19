@@ -14,9 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.LocalDateTime;
-import java.util.Comparator;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -41,17 +39,17 @@ class CustomerServiceTest {
     @Order(1)
     void signUpCustomer() {
         Customer customer = Customer.builder()
-                .firstName("hassan")
+                .firstName("omid")
                 .lastName("hassani")
-                .email("hassanii@gmail.com")
+                .email("omidiii@gmail.com")
                 .password("ASvSD@#423")
                 .registrationTime(LocalDateTime.now())
                 .role(Role.CUSTOMER)
                 .credit(10000L)
                 .build();
         customerService.signUpCustomer(customer);
-        Optional<Customer> findEmail = customerService.findByEmail("hassanii@gmail.com");
-        Address address = new Address("Tehran", "varamin", "koche1", "asa12", findEmail.get());
+        Optional<Customer> findEmail = customerService.findByEmail("omidiii@gmail.com");
+        Address address = new Address("Tehran", "valiiasr", "koche1", "asa12", findEmail.get());
         customerService.addAddress(address, findEmail.get());
         Assertions.assertTrue(findEmail.isPresent());
         Assertions.assertEquals(customer.getEmail(), findEmail.get().getEmail());
@@ -79,7 +77,7 @@ class CustomerServiceTest {
     @Order(3)
     void signInCustomer() {
         String email = "AliMhmd@gmail.com";
-        String pass = "ASvSD@#423";
+        String pass = "ASvSD@#4234";
         Customer customer = customerService.signInCustomer(email, pass);
         Assertions.assertEquals(email, customer.getEmail());
         Assertions.assertEquals(pass, customer.getPassword());
@@ -99,9 +97,9 @@ class CustomerServiceTest {
     @Test
     @Order(5)
     void changePassword() {
-        customerService.changePassword("AliMhmd@gmail.com", "ASvSD@#423", "ASvSD@#13801125");
+        customerService.changePassword("AliMhmd@gmail.com", "ASvSD@#13801125", "ASvSD@#4234");
         Optional<Customer> customer = customerService.findByEmail("AliMhmd@gmail.com");
-        Assertions.assertEquals(customer.get().getPassword(), "ASvSD@#13801125");
+        Assertions.assertEquals(customer.get().getPassword(), "ASvSD@#4234");
     }
 
     @Test
@@ -117,7 +115,7 @@ class CustomerServiceTest {
     @Order(7)
     void watchAndOrder() {
         Customer customer = customerService.findByEmail("AliMhmd@gmail.com").get();
-        SubService subService = subServiceService.findByName("barge").get();
+        SubService subService = subServiceService.findByName("bargers").get();
 
         Orders orders = Orders.builder()
                 .orderStatus(OrderStatus.WAITING_FOR_SPECIALIST_SUGGESTION)
@@ -138,7 +136,7 @@ class CustomerServiceTest {
     @Test
     @Order(8)
     void watchAndOrderWithFakeCustomer() {
-        Customer customer = Customer.builder().id(5L).build();
+        Customer customer = Customer.builder().id(500L).build();
         SubService subService = SubService.builder().id(1L).build();
         Orders orders = Orders.builder()
                 .orderStatus(OrderStatus.WAITING_FOR_SPECIALIST_SUGGESTION)
@@ -200,7 +198,7 @@ class CustomerServiceTest {
     @Order(12)
     void newTrackOrders() {
         Customer customer = customerService.findByEmail("AliMhmd@gmail.com").get();
-        Long id = 1L;
+        Long id = 6L;
         customerService.trackOrders(id, customer);
         Optional<Offer> optionalOffer = offerService.findById(id);
         Assertions.assertEquals(OrderStatus.WAITING_FOR_SPECIALIST_TO_COME,
@@ -211,7 +209,7 @@ class CustomerServiceTest {
     @Order(13)
     void trackOrdersWithExist() {
         Customer customer = customerService.findByEmail("AliMhmd@gmail.com").get();
-        Long id = 1L;
+        Long id = 6L;
         Assertions.assertThrows(OfferStatusException.class, () -> {
             customerService.trackOrders(id, customer);
         });
