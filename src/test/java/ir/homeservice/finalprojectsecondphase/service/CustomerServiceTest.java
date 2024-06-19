@@ -230,11 +230,10 @@ class CustomerServiceTest {
     @Test
     @Order(15)
     void orderIsNotExistException() {
+        Customer customer = customerService.findByEmail("AliMhmd@gmail.com").get();
+        Long id = orderService.findAll().get(0).getId();
         Assertions.assertThrows(OrderIsNotExistException.class, () -> {
-            Customer customer = customerService.findByEmail("weqw@gmail.com").get();
-            Long id = orderService.findAll().get(12).getId();
             customerService.notificationOfStatus(id, customer);
-            Assertions.assertEquals(orderService.findById(id).get().getOrderStatus(), OrderStatus.DONE);
         });
     }
 }
