@@ -14,16 +14,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Arrays;
 import java.util.Optional;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class SpecialistService {
+    private final Validation validation;
     private final OrderService orderService;
     private final OfferService offerService;
-    private final Validation validation;
     private final SpecialistRepository specialistRepository;
 
     public void signUpSpecialist(Specialist specialist) {
@@ -45,9 +44,24 @@ public class SpecialistService {
                 .orElseThrow(() -> new NotFoundException("Specialist not found. "));
     }
 
+    public void changePassword(String email, String oldPassword, String newPassword) {
+        validation.checkEmail(email);
+        validation.checkPassword(oldPassword);
+        validation.checkPassword(newPassword);
+        Optional<Specialist> specialist = specialistRepository.findAll().stream()
+                .filter(s -> email.equals(s.getEmail()) && oldPassword.equals(s.getPassword()))
+                .findFirst();
+        if (specialist.isEmpty()) {
+            throw new DuplicateEmailException("Invalid email or old password.");
+        }
+        Specialist specialist1 = specialist.get();
+        specialist1.setPassword(newPassword);
+        save(specialist1);
+    }
+
     public void newOffers(Offer offer, Specialist specialist) {
-        validation.checkPositiveNumber(offer.getOrders().getId());
-        validation.checkPositiveNumber(offer.getProposedPrice());
+        validation.checkNumber(offer.getOrders().getId());
+        validation.checkNumber(offer.getProposedPrice());
         Optional<Specialist> specialistOptional = specialistRepository.findById(specialist.getId());
         if (!specialistOptional.get().getStatus().equals(SpecialistStatus.CONFIRMED))
             throw new SpecialistNoAccessException("the status of specialist is not CONFIRMED");
@@ -72,22 +86,6 @@ public class SpecialistService {
             ordersOptional.get().setOrderStatus(OrderStatus.WAITING_FOR_SPECIALIST_SELECTION);
         orderService.save(ordersOptional.get());
     }
-
-    public void changePassword(String email, String oldPassword, String newPassword) {
-        validation.checkEmail(email);
-        validation.checkPassword(oldPassword);
-        validation.checkPassword(newPassword);
-        Optional<Specialist> specialist = specialistRepository.findAll().stream()
-                .filter(s -> email.equals(s.getEmail()) && oldPassword.equals(s.getPassword()))
-                .findFirst();
-        if (specialist.isEmpty()) {
-            throw new DuplicateEmailException("Invalid email or old password.");
-        }
-        Specialist specialist1 = specialist.get();
-        specialist1.setPassword(newPassword);
-        save(specialist1);
-    }
-
 
     public Optional<Specialist> findById(Long id) {
         return specialistRepository.findById(id);

@@ -81,9 +81,7 @@ class SpecialistServiceTest {
     void signInSpecialist() {
         String email = "AmirM.ah@yahoo.com";
         String password = "45#Po@iu";
-
         Specialist specialist = specialistService.signInSpecialist(email, password);
-
         Assertions.assertEquals(email, specialist.getEmail());
         Assertions.assertEquals(password, specialist.getPassword());
     }
