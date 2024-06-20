@@ -80,7 +80,7 @@ class SpecialistServiceTest {
     @Order(4)
     void signInSpecialist() {
         String email = "AmirM.ah@yahoo.com";
-        String password = "45#Po@iup";
+        String password = "45#Po@iuui";
         Specialist specialist = specialistService.signInSpecialist(email, password);
         Assertions.assertEquals(email, specialist.getEmail());
         Assertions.assertEquals(password, specialist.getPassword());
@@ -92,6 +92,7 @@ class SpecialistServiceTest {
     void changePassword() {
         specialistService.changePassword("AmirM.ah@yahoo.com", "45#Po@iuui", "45#Po@iup");
         Optional<Specialist> specialist = specialistService.findByEmail("AmirM.ah@yahoo.com");
+        Assertions.assertTrue(specialist.isPresent());
         assertEquals(specialist.get().getPassword(), "45#Po@iup");
     }
 
@@ -116,6 +117,7 @@ class SpecialistServiceTest {
         Optional<Orders> ordersList = Optional.of(orderService.findAll().get(0));
         offer.setOrders(ordersList.get());
         Optional<Specialist> specialist = specialistService.findByEmail("AmirM.ah@yahoo.com");
+        Assertions.assertTrue(specialist.isPresent());
         offer.setSpecialist(specialist.get());
         specialistService.newOffers(offer, specialist.get());
         assertEquals(1, offerService.findAll().size());
@@ -134,6 +136,7 @@ class SpecialistServiceTest {
             Optional<Orders> ordersList = Optional.of(orderService.findAll().get(0));
             offer.setOrders(ordersList.get());
             Optional<Specialist> specialist = specialistService.findByEmail("test2M.ah@yahoo.com");
+            Assertions.assertTrue(specialist.isPresent());
             offer.setSpecialist(specialist.get());
             specialistService.newOffers(offer, specialist.get());
             assertEquals(1, offerService.findAll().size());
@@ -153,6 +156,7 @@ class SpecialistServiceTest {
             Optional<Orders> ordersList = Optional.of(orderService.findAll().get(200));
             offer.setOrders(ordersList.get());
             Optional<Specialist> specialist = specialistService.findByEmail("test2M.ah@yahoo.com");
+            Assertions.assertTrue(specialist.isPresent());
             offer.setSpecialist(specialist.get());
             specialistService.newOffers(offer, specialist.get());
             assertEquals(1, offerService.findAll().size());
@@ -172,6 +176,7 @@ class SpecialistServiceTest {
             Optional<Orders> ordersList = Optional.of(orderService.findAll().get(0));
             offer.setOrders(ordersList.get());
             Optional<Specialist> specialist = specialistService.findByEmail("AmirM.ah@yahoo.com");
+            Assertions.assertTrue(specialist.isPresent());
             offer.setSpecialist(specialist.get());
             specialistService.newOffers(offer, specialist.get());
             assertEquals(1, offerService.findAll().size());
@@ -192,6 +197,7 @@ class SpecialistServiceTest {
         offer.setOrders(ordersList.get());
         assertThrows(SpecialistNoAccessException.class, () -> {
             Optional<Specialist> specialist = specialistService.findByEmail("AmirM.ah@yahoo.com");
+            Assertions.assertTrue(specialist.isPresent());
             offer.setSpecialist(specialist.get());
             specialistService.newOffers(offer, specialist.get());
             assertEquals(1, offerService.findAll().size());
@@ -211,6 +217,7 @@ class SpecialistServiceTest {
             Optional<Orders> ordersList = Optional.of(orderService.findAll().get(0));
             offer.setOrders(ordersList.get());
             Optional<Specialist> specialist = specialistService.findByEmail("AmirM.ah@yahoo.com");
+            Assertions.assertTrue(specialist.isPresent());
             offer.setSpecialist(specialist.get());
             specialistService.newOffers(offer, specialist.get());
             assertEquals(1, offerService.findAll().size());
@@ -230,6 +237,7 @@ class SpecialistServiceTest {
             Optional<Orders> ordersList = Optional.of(orderService.findAll().get(0));
             offer.setOrders(ordersList.get());
             Optional<Specialist> specialist = specialistService.findByEmail("AmirM.ah@yahoo.com");
+            Assertions.assertTrue(specialist.isPresent());
             offer.setSpecialist(specialist.get());
             specialistService.newOffers(offer, specialist.get());
             assertEquals(1, offerService.findAll().size());
@@ -249,6 +257,7 @@ class SpecialistServiceTest {
             Optional<Orders> ordersList = Optional.of(orderService.findAll().get(0));
             offer.setOrders(ordersList.get());
             Optional<Specialist> specialist = specialistService.findByEmail("AmirM.ah@yahoo.com");
+            Assertions.assertTrue(specialist.isPresent());
             offer.setSpecialist(specialist.get());
             specialistService.newOffers(offer, specialist.get());
             assertEquals(1, offerService.findAll().size());

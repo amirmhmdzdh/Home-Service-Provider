@@ -21,7 +21,7 @@ public class Validation {
     public boolean checkText(String text) {
         String regex = "^[a-zA-Z ]{3,}$";
         if (!Pattern.matches(regex, text))
-            throw new AlphabetException("the wording of the text is not incorrect!");
+            throw new AlphabetException("the word is not incorrect!");
         return true;
     }
 
@@ -59,14 +59,6 @@ public class Validation {
         return imagePath;
     }
 
-    //    public boolean checkOfferBelongToTheOrder(Long offerId, Customer customer) {
-//        boolean[] exist = new boolean[1];
-//        customer.getOrdersList().forEach(order -> exist[0] = order.getOfferList().stream().filter(offer ->
-//                offer.getId().equals(offerId)).findFirst().isEmpty());
-//        if (exist[0])
-//            throw new OfferNotExistException("this offer not belong to your orders");
-//        return true;
-//    }
     public boolean checkOfferBelongToTheOrder(Long offerId, Customer customer) {
         boolean exists = customer.getOrdersList()
                 .stream()

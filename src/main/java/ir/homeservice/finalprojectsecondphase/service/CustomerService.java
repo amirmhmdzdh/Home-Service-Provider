@@ -66,7 +66,7 @@ public class CustomerService {
                 .filter(c -> email.equals(c.getEmail()) && oldPassword.equals(c.getPassword()))
                 .findFirst();
         if (customer.isEmpty()) {
-            throw new DuplicateEmailException("Invalid email or old password.");
+            throw new NotFoundException("Invalid email or old password.");
         }
         Customer customer1 = customer.get();
         customer1.setPassword(newPassword);

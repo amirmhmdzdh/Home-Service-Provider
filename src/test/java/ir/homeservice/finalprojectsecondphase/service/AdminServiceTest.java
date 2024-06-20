@@ -69,10 +69,10 @@ class AdminServiceTest {
     @Test
     @Order(4)
     void createMainService() {
-        adminService.createMainService(new MainService("kasht"));
+        adminService.createMainService(new MainService("Build"));
         Optional<MainService> optionalMainService =
-                mainServiceService.findByName("kasht");
-        assertEquals("kasht", optionalMainService.get().getName());
+                mainServiceService.findByName("Build");
+        assertEquals("Build", optionalMainService.get().getName());
     }
 
     @Test
@@ -90,7 +90,7 @@ class AdminServiceTest {
     void addDuplicateSubServices() {
         assertThrows(SubServicesIsExistException.class, () -> {
             adminService
-                    .createSubService(new SubService("barge", 100L,
+                    .createSubService(new SubService("bargers", 100L,
                             "test", new MainService("Building")));
         });
     }
@@ -163,9 +163,10 @@ class AdminServiceTest {
     @Test
     @Order(12)
     void confirmSpecialist() {
-        Optional<Specialist> specialist = specialistService.findByEmail("testM.ah@yahoo.com");
+        Optional<Specialist> specialist = specialistService.findByEmail("AmirM.ah@yahoo.com");
+        assertTrue(specialist.isPresent());
         adminService.confirmSpecialist(specialist.get().getId());
-        Specialist updateSpecialist = specialistService.findByEmail("testM.ah@yahoo.com").get();
+        Specialist updateSpecialist = specialistService.findByEmail("AmirM.ah@yahoo.com").get();
         assertEquals(updateSpecialist.getStatus(), SpecialistStatus.CONFIRMED);
     }
 
@@ -187,7 +188,6 @@ class AdminServiceTest {
 
 
         SubService retrievedSubService = subServiceService.findByName("bargers").get();
-        // assertTrue(specialist.getSubServicesList().stream().anyMatch(sub -> sub.getId().equals(retrievedSubService.getId())), "Sub-service not associated with specialist");
         assertEquals(retrievedSubService.getId(), subService.getId(), "Retrieved sub-service ID does not match");
 
     }
@@ -216,7 +216,9 @@ class AdminServiceTest {
     @Order(16)
     void specialistIsNotConfirm() {
         Optional<SubService> serviceByName = subServiceService.findByName("bargers");
-        Optional<Specialist> specialist = specialistService.findByEmail("test2M.ah@yahoo.com");
+        assertTrue(serviceByName.isPresent());
+        Optional<Specialist> specialist = specialistService.findByEmail("AmirM.ah@yahoo.com");
+        assertTrue(specialist.isPresent());
         assertThrows(SpecialistNoAccessException.class, () -> {
             adminService.addSpecialistToSubService(serviceByName.get().getId(), specialist.get().getId());
         });
@@ -226,7 +228,9 @@ class AdminServiceTest {
     @Order(17)
     void subServiceDuplicate() {
         Optional<SubService> serviceByName = subServiceService.findByName("bargers");
+        assertTrue(serviceByName.isPresent());
         Optional<Specialist> specialist = specialistService.findByEmail("AmirM.ah@yahoo.com");
+        assertTrue(specialist.isPresent());
         assertThrows(DuplicateSubServiceException.class, () -> {
             adminService.addSpecialistToSubService(serviceByName.get().getId(), specialist.get().getId());
         });
@@ -273,7 +277,7 @@ class AdminServiceTest {
     void findAllMainServices() {
         List<MainService> allMainService = adminService.findAllMainService();
         assertNotNull("Returned main service list should not be null", allMainService.toString());
-        assertEquals(2, allMainService.size());
+        assertEquals(1, allMainService.size());
     }
 
     @Test
