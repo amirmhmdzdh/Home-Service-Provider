@@ -10,6 +10,8 @@ import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -265,4 +267,22 @@ class AdminServiceTest {
         Optional<SubService> deletedSubService = subServiceService.findByName("bargers");
         Assertions.assertFalse(serviceByEmail.get().getSubServicesList().contains(deletedSubService));
     }
+
+    @Test
+    @Order(21)
+    void findAllMainServices() {
+        List<MainService> allMainService = adminService.findAllMainService();
+        assertNotNull("Returned main service list should not be null", allMainService.toString());
+        assertEquals(2, allMainService.size());
+    }
+
+    @Test
+    @Order(22)
+    void findAllSubServices() {
+        List<SubService> allSubService = adminService.findAllSubService();
+        assertNotNull("Returned main service list should not be null", allSubService.toString());
+        assertEquals(2, allSubService.size());
+    }
+
+
 }
