@@ -45,7 +45,7 @@ class SpecialistServiceTest {
         byte[] imageData = Files.readAllBytes(Paths.get(pathImage));
         Specialist specialist = Specialist.builder()
                 .firstName("Amir").lastName("mhmdzdh").role(Role.SPECIALIST).email("AmirM.ah@yahoo.com")
-                .password("45#Po@iu").image(imageData).registrationTime(LocalDateTime.now())
+                .password("45#Po@iuui").image(imageData).registrationTime(LocalDateTime.now())
                 .credit(0L).star(0).status(SpecialistStatus.NEW)
                 .build();
         assertThrows(DuplicateEmailException.class, () -> {
@@ -59,7 +59,7 @@ class SpecialistServiceTest {
         String pathImage = "D:\\0.jpg";
         byte[] imageData = Files.readAllBytes(Paths.get(pathImage));
         Specialist specialist = Specialist.builder()
-                .firstName("haji").lastName("mhmdzdh").role(Role.SPECIALIST).email("hajiM.ah@yahoo.com")
+                .firstName("haji").lastName("mhmdzdh").role(Role.SPECIALIST).email("haji.ah@yahoo.com")
                 .password("45#Po@iu").image(imageData).registrationTime(LocalDateTime.now())
                 .credit(0L).star(0).status(SpecialistStatus.NEW)
                 .build();
@@ -135,7 +135,7 @@ class SpecialistServiceTest {
                     .build();
             Optional<Orders> ordersList = Optional.of(orderService.findAll().get(0));
             offer.setOrders(ordersList.get());
-            Optional<Specialist> specialist = specialistService.findByEmail("test2M.ah@yahoo.com");
+            Optional<Specialist> specialist = specialistService.findByEmail("AmirM.ah@yahoo.com");
             Assertions.assertTrue(specialist.isPresent());
             offer.setSpecialist(specialist.get());
             specialistService.newOffers(offer, specialist.get());

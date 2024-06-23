@@ -79,8 +79,8 @@ class AdminServiceTest {
     void mainServicesIsExistException() {
         assertThrows(MainServicesIsExistException.class, () -> {
             adminService
-                    .createSubService(new SubService("barge", 100L,
-                            "test", new MainService("Build")));
+                    .createSubService(new SubService("barger", 100L,
+                            "test", new MainService("Buildert")));
         });
     }
 
@@ -89,7 +89,7 @@ class AdminServiceTest {
     void addDuplicateSubServices() {
         assertThrows(SubServicesIsExistException.class, () -> {
             adminService
-                    .createSubService(new SubService("bargers", 100L,
+                    .createSubService(new SubService("barge", 100L,
                             "test", new MainService("Building")));
         });
     }
@@ -124,15 +124,15 @@ class AdminServiceTest {
     @Test
     @Order(9)
     void updateSubService() {
-        SubService subServices = subServiceService.findByName("barge").get();
+        SubService subServices = subServiceService.findByName("barger").get();
         SubService subService = SubService.builder()
                 .id(subServices.getId())
-                .name("bargers")
+                .name("barge")
                 .basePrice(100L)
                 .description("hardWorkering")
                 .build();
         adminService.updateSubService(subService);
-        SubService newSubServices = subServiceService.findByName("bargers").get();
+        SubService newSubServices = subServiceService.findByName("barge").get();
         assertEquals(subServices.getId(), newSubServices.getId());
     }
 
@@ -174,8 +174,8 @@ class AdminServiceTest {
     @Test
     @Order(13)
     void testAddSpecialistToSubService() {
-        Optional<Specialist> specialistOptional = specialistService.findByEmail("AmirM.ah@yahoo.com");
-        Optional<SubService> subServiceOptional = subServiceService.findByName("bargers");
+        Optional<Specialist> specialistOptional = specialistService.findByEmail("haji.ah@yahoo.com");
+        Optional<SubService> subServiceOptional = subServiceService.findByName("barge");
 
         assertTrue(specialistOptional.isPresent(), "Specialist not found");
         assertTrue(subServiceOptional.isPresent(), "Sub-service not found");
@@ -186,7 +186,7 @@ class AdminServiceTest {
         adminService.addSpecialistToSubService(subService.getId(), specialist.getId());
 
 
-        SubService retrievedSubService = subServiceService.findByName("bargers").get();
+        SubService retrievedSubService = subServiceService.findByName("barge").get();
         assertEquals(retrievedSubService.getId(), subService.getId(), "Retrieved sub-service ID does not match");
 
     }
@@ -214,7 +214,7 @@ class AdminServiceTest {
     @Test
     @Order(16)
     void specialistIsNotConfirm() {
-        Optional<SubService> serviceByName = subServiceService.findByName("bargers");
+        Optional<SubService> serviceByName = subServiceService.findByName("barge");
         assertTrue(serviceByName.isPresent());
         Optional<Specialist> specialist = specialistService.findByEmail("AmirM.ah@yahoo.com");
         assertTrue(specialist.isPresent());
@@ -226,7 +226,7 @@ class AdminServiceTest {
     @Test
     @Order(17)
     void subServiceDuplicate() {
-        Optional<SubService> serviceByName = subServiceService.findByName("bargers");
+        Optional<SubService> serviceByName = subServiceService.findByName("barge");
         assertTrue(serviceByName.isPresent());
         Optional<Specialist> specialist = specialistService.findByEmail("AmirM.ah@yahoo.com");
         assertTrue(specialist.isPresent());
@@ -237,7 +237,7 @@ class AdminServiceTest {
     }
 
 
-    //---------------------------------delete Specialist to SubService-----------------------------------------------------
+    //---------------------------------delete Specialist to SubService--------------------------------------------------
 
     @Test
     @Order(18)
@@ -264,10 +264,10 @@ class AdminServiceTest {
     void deleteSubServicesFromSpecialist() {
         Optional<Specialist> serviceByEmail = specialistService.findByEmail("AmirM.ah@yahoo.com");
         Assertions.assertTrue(serviceByEmail.isPresent(), "Specialist should exist with the given email");
-        Optional<SubService> subService = subServiceService.findByName("bargers");
+        Optional<SubService> subService = subServiceService.findByName("barge");
         Assertions.assertTrue(subService.isPresent(), "Sub-service should exist with the given name");
         adminService.deleteSubServicesFromSpecialist(subService.get().getId(), serviceByEmail.get().getId());
-        Optional<SubService> deletedSubService = subServiceService.findByName("bargers");
+        Optional<SubService> deletedSubService = subServiceService.findByName("barge");
         Assertions.assertFalse(serviceByEmail.get().getSubServicesList().contains(deletedSubService));
     }
 
