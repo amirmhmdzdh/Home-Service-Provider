@@ -1,5 +1,7 @@
 package ir.homeservice.finalprojectsecondphase.service;
 
+import ir.homeservice.finalprojectsecondphase.dto.request.SubServiceRequest;
+import ir.homeservice.finalprojectsecondphase.dto.request.UpdateSubServiceRequest;
 import ir.homeservice.finalprojectsecondphase.exception.*;
 import ir.homeservice.finalprojectsecondphase.model.service.MainService;
 import ir.homeservice.finalprojectsecondphase.model.service.SubService;
@@ -7,12 +9,10 @@ import ir.homeservice.finalprojectsecondphase.model.user.Admin;
 import ir.homeservice.finalprojectsecondphase.model.user.Specialist;
 import ir.homeservice.finalprojectsecondphase.model.user.enums.SpecialistStatus;
 import ir.homeservice.finalprojectsecondphase.repository.AdminRepository;
-import ir.homeservice.finalprojectsecondphase.utill.Validation;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -23,7 +23,6 @@ public class AdminService {
     private final SubServiceService subServiceService;
     private final SpecialistService specialistService;
     private final AdminRepository adminRepository;
-    private final Validation validation;
 
 
     public Admin signInAdmin(String email, String password) {
@@ -32,90 +31,76 @@ public class AdminService {
     }
 
 
-    public void createMainService(MainService mainService) {
-        validation.checkText(mainService.getName());
+    public MainService createMainService(MainService mainService) {
         if (mainServiceService.findByName(mainService.getName()).isPresent())
-            throw new MainServicesIsExistException("this main service already exist!");
+            throw new DuplicateInformationException("this " + mainService.getName() + " main service already exist!");
         MainService mainService1 = MainService.builder()
                 .name(mainService.getName())
                 .build();
-        mainServiceService.save(mainService1);
+        return mainServiceService.save(mainService1);
     }
 
-    public void createSubService(SubService subService) {
-        MainService mainService = subService.getMainService();
-        String subServiceName = subService.getName();
-        validation.checkText(mainService.getName());
-        validation.checkText(subServiceName);
-        validation.checkBlank(subService.getDescription());
-        Optional<MainService> mainServiceOptional = mainServiceService.findByName(mainService.getName());
+    public SubService createSubService(SubServiceRequest subService) {
+
+        String mainServiceName = subService.mainService().name();
+        String subServiceName = subService.name();
+        Optional<MainService> mainServiceOptional = mainServiceService.findByName(mainServiceName);
         if (mainServiceOptional.isEmpty())
-            throw new MainServicesIsExistException("this main service dose not exist!");
+            throw new NotFoundException("this main service dose not exist!");
+
         if (subServiceService.findByName(subServiceName).isPresent())
-            throw new SubServicesIsExistException("this subService already exist!");
+            throw new NotFoundException("this subService already exist!");
         MainService mainService1 = mainServiceOptional.get();
-        subService.setMainService(mainService1);
-        subServiceService.save(subService);
+        SubService subService1 = SubService.builder()
+                .name(subServiceName)
+                .basePrice(subService.basePrice())
+                .description(subService.description())
+                .mainService(mainService1)
+                .build();
+        return subServiceService.save(subService1);
     }
 
-    public void updateSubService(SubService upateSubService) {
-        validation.checkText(upateSubService.getName());
-        Optional<SubService> existingSubService = subServiceService.findById(upateSubService.getId());
-        if (existingSubService.isEmpty())
-            throw new SubServicesIsNotExistException("this subServices dose not exist!");
-        SubService service = existingSubService.get();
-        service.setName(upateSubService.getName());
-        validation.checkText(upateSubService.getDescription());
-        service.setDescription(upateSubService.getDescription());
-        validation.checkNumber(upateSubService.getBasePrice());
-        service.setBasePrice(upateSubService.getBasePrice());
-        subServiceService.save(existingSubService.get());
+    public SubService updateSubService(UpdateSubServiceRequest updateSubService) {
+        Optional<SubService> serviceServiceById = subServiceService.findById(updateSubService.subServicesId());
+        if (serviceServiceById.isEmpty())
+            throw new NotFoundException("this subServices dose not exist!");
+        SubService service = serviceServiceById.get();
+        service.setName(updateSubService.name());
+        service.setDescription(updateSubService.description());
+        service.setBasePrice(updateSubService.basePrice());
+        return subServiceService.save(serviceServiceById.get());
     }
+
 
     public void confirmSpecialist(Long specialistId) {
-        validation.checkNumber(specialistId);
         Specialist specialist = specialistService.findById(specialistId)
-                .orElseThrow(() -> new SpecialistIsNotExistException("This specialist does not exist!"));
+                .orElseThrow(() -> new NotFoundException("This specialist does not exist!"));
         if (specialist.getStatus().equals(SpecialistStatus.CONFIRMED))
-            throw new SpecialistIsHoldsExistException("this specialist is currently certified!");
+            throw new DuplicateInformationException("this specialist is currently certified!");
         specialist.setStatus(SpecialistStatus.CONFIRMED);
         specialistService.save(specialist);
     }
 
     public void addSpecialistToSubService(Long subServiceId, Long specialistId) {
-        validation.checkNumber(subServiceId);
-        validation.checkNumber(specialistId);
         SubService subService = subServiceService.findById(subServiceId)
-                .orElseThrow(() -> new SubServicesIsNotExistException("This subService does not exist!"));
+                .orElseThrow(() -> new NotFoundException("This subService does not exist!"));
         Specialist specialist = specialistService.findById(specialistId)
-                .orElseThrow(() -> new SpecialistIsNotExistException("This specialist does not exist!"));
+                .orElseThrow(() -> new NotFoundException("This specialist does not exist!"));
         if (specialist.getStatus() != SpecialistStatus.CONFIRMED)
-            throw new SpecialistNoAccessException("The status of the specialist is not CONFIRMED");
+            throw new NotFoundException("The status of the specialist is not CONFIRMED");
         if (specialist.getSubServicesList().contains(subService))
-            throw new DuplicateSubServiceException("the subService is Duplicate");
+            throw new DuplicateInformationException("the subService is Duplicate");
         specialist.addSubServices(subService);
         specialistService.save(specialist);
     }
 
     public void deleteSubServicesFromSpecialist(Long subServiceId, Long specialistId) {
-        validation.checkNumber(subServiceId);
-        validation.checkNumber(specialistId);
         SubService subService = subServiceService.findById(subServiceId)
-                .orElseThrow(() -> new SubServicesIsNotExistException("This subService does not exist!"));
+                .orElseThrow(() -> new NotFoundException("This subService does not exist!"));
         Specialist specialist = specialistService.findById(specialistId)
-                .orElseThrow(() -> new SpecialistIsNotExistException("This specialist does not exist!"));
+                .orElseThrow(() -> new NotFoundException("This specialist does not exist!"));
         specialist.deleteSubServices(subService);
         specialistService.save(specialist);
     }
-
-    public List<MainService> findAllMainService() {
-        return mainServiceService.findAllMainService();
-
-    }
-
-    public List<SubService> findAllSubService() {
-        return subServiceService.findAllSubService();
-    }
-
 }
 
