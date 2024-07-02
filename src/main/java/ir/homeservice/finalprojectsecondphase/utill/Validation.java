@@ -1,6 +1,7 @@
 package ir.homeservice.finalprojectsecondphase.utill;
 
 
+import ir.homeservice.finalprojectsecondphase.dto.request.OrdersRequest;
 import ir.homeservice.finalprojectsecondphase.exception.*;
 import ir.homeservice.finalprojectsecondphase.model.order.Orders;
 import ir.homeservice.finalprojectsecondphase.model.service.SubService;
@@ -45,18 +46,21 @@ public class Validation {
         return true;
     }
 
-    public byte[] checkImage(byte[] imagePath) {
-        if (imagePath == null) {
+    public byte[] checkImage(String image) {
+        if (image == null) {
             throw new ImageFormatException("The image is empty!");
         }
-        String imageString = new String(imagePath);
-        if (imageString.matches(".*\\.(jpg|jpeg)$")) {
+
+        if (!image.matches(".*\\.(jpg|jpeg)$")) {
             throw new ImageFormatException("Invalid file format. Only JPG and JPEG formats are supported.");
         }
-        if (imagePath != null && imagePath.length > 300 * 1024) {
+        byte[] imageBytes = image.getBytes();
+
+        if (imageBytes.length > 300 * 1024) {
             throw new ImageFormatException("The size of the image exceeds the limit!");
         }
-        return imagePath;
+
+        return imageBytes;
     }
 
     public boolean checkOfferBelongToTheOrder(Long offerId, Customer customer) {
@@ -65,11 +69,9 @@ public class Validation {
                 .anyMatch(order -> order.getOfferList()
                         .stream()
                         .anyMatch(offer -> offer.getId().equals(offerId)));
-
         if (!exists) {
             throw new OfferNotExistException("This offer does not belong to your orders.");
         }
-
         return true;
     }
 
@@ -79,8 +81,8 @@ public class Validation {
         return true;
     }
 
-    public void validatePrice(SubService subService, Orders order) {
-        if (subService.getBasePrice() > order.getProposedPrice()) {
+    public void validatePrice(SubService subService, OrdersRequest order) {
+        if (subService.getBasePrice() > order.proposedPrice()) {
             throw new PriceException("The suggested price can be lower than the base price.");
         }
     }

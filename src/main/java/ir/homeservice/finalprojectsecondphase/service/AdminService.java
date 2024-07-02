@@ -1,7 +1,7 @@
 package ir.homeservice.finalprojectsecondphase.service;
 
-import ir.homeservice.finalprojectsecondphase.dto.request.SubServiceRequest;
-import ir.homeservice.finalprojectsecondphase.dto.request.UpdateSubServiceRequest;
+import ir.homeservice.finalprojectsecondphase.dto.request.SearchForUser;
+import ir.homeservice.finalprojectsecondphase.dto.response.FilterUserResponse;
 import ir.homeservice.finalprojectsecondphase.exception.*;
 import ir.homeservice.finalprojectsecondphase.model.service.MainService;
 import ir.homeservice.finalprojectsecondphase.model.service.SubService;
@@ -13,17 +13,19 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class AdminService {
-    private final MainServiceService mainServiceService;
-    private final SubServiceService subServiceService;
-    private final SpecialistService specialistService;
+    private final CustomerService customerService;
     private final AdminRepository adminRepository;
-
+    private final SpecialistService specialistService;
+    private final SubServiceService subServiceService;
+    private final MainServiceService mainServiceService;
 
     public Admin signInAdmin(String email, String password) {
         return adminRepository.findByEmailAndPassword(email, password)
@@ -40,34 +42,33 @@ public class AdminService {
         return mainServiceService.save(mainService1);
     }
 
-    public SubService createSubService(SubServiceRequest subService) {
+    public SubService createSubService(SubService subService) {
 
-        String mainServiceName = subService.mainService().name();
-        String subServiceName = subService.name();
-        Optional<MainService> mainServiceOptional = mainServiceService.findByName(mainServiceName);
+        MainService mainService = subService.getMainService();
+        Optional<MainService> mainServiceOptional = mainServiceService.findByName(mainService.getName());
         if (mainServiceOptional.isEmpty())
             throw new NotFoundException("this main service dose not exist!");
 
-        if (subServiceService.findByName(subServiceName).isPresent())
+        if (subServiceService.findByName(subService.getName()).isPresent())
             throw new NotFoundException("this subService already exist!");
         MainService mainService1 = mainServiceOptional.get();
         SubService subService1 = SubService.builder()
-                .name(subServiceName)
-                .basePrice(subService.basePrice())
-                .description(subService.description())
+                .name(subService.getName())
+                .basePrice(subService.getBasePrice())
+                .description(subService.getDescription())
                 .mainService(mainService1)
                 .build();
         return subServiceService.save(subService1);
     }
 
-    public SubService updateSubService(UpdateSubServiceRequest updateSubService) {
-        Optional<SubService> serviceServiceById = subServiceService.findById(updateSubService.subServicesId());
+    public SubService updateSubService(SubService updateSubService) {
+        Optional<SubService> serviceServiceById = subServiceService.findById(updateSubService.getId());
         if (serviceServiceById.isEmpty())
             throw new NotFoundException("this subServices dose not exist!");
         SubService service = serviceServiceById.get();
-        service.setName(updateSubService.name());
-        service.setDescription(updateSubService.description());
-        service.setBasePrice(updateSubService.basePrice());
+        service.setName(updateSubService.getName());
+        service.setDescription(service.getDescription());
+        service.setBasePrice(service.getBasePrice());
         return subServiceService.save(serviceServiceById.get());
     }
 
@@ -101,6 +102,20 @@ public class AdminService {
                 .orElseThrow(() -> new NotFoundException("This specialist does not exist!"));
         specialist.deleteSubServices(subService);
         specialistService.save(specialist);
+    }
+
+    public List<FilterUserResponse> searchUser(SearchForUser search) {
+        List<FilterUserResponse> filterUserResponseList = new ArrayList<>();
+
+        switch (search.getUserType()) {
+            case "CUSTOMER" -> filterUserResponseList.addAll(customerService.customerFilter(search));
+            case "SPECIALIST" -> filterUserResponseList.addAll(specialistService.specialistFilter(search));
+            case "ALL" -> {
+                filterUserResponseList.addAll(customerService.customerFilter(search));
+                filterUserResponseList.addAll(specialistService.specialistFilter(search));
+            }
+        }
+        return filterUserResponseList;
     }
 }
 

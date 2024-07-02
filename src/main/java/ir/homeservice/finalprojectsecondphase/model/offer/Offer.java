@@ -27,7 +27,6 @@ public class Offer extends BaseEntity<Long> {
     private LocalDateTime sendTime;
 
 
-    @NotNull(message = "Filling it is mandatory")
     private Long proposedPrice;
 
 
@@ -36,6 +35,7 @@ public class Offer extends BaseEntity<Long> {
 
 
     @ManyToOne(fetch = FetchType.EAGER)
+    @ToString.Exclude
     private Orders orders;
 
 

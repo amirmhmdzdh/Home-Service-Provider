@@ -1,5 +1,6 @@
 package ir.homeservice.finalprojectsecondphase.service;
 
+import ir.homeservice.finalprojectsecondphase.dto.response.OfferResponse;
 import ir.homeservice.finalprojectsecondphase.model.offer.Offer;
 import ir.homeservice.finalprojectsecondphase.model.offer.enums.OfferStatus;
 import ir.homeservice.finalprojectsecondphase.repository.OfferRepository;
@@ -17,8 +18,8 @@ public class OfferService {
 
     private final OfferRepository offerRepository;
 
-    public void save(Offer offer) {
-        offerRepository.save(offer);
+    public Offer save(Offer offer) {
+        return offerRepository.save(offer);
     }
 
     public List<Offer> findAll() {
@@ -32,10 +33,10 @@ public class OfferService {
     public List<Offer> findOfferListByProposedPrice(Long orderId) {
         return offerRepository.findOfferListByProposedPrice(orderId, OfferStatus.WAITING);
     }
-    public List<Offer> findOfferListBySpecialistScore(Long orderId) {
-        return offerRepository.findOfferListBySpecialistScore(orderId,OfferStatus.WAITING);
-    }
 
+    public List<Offer> findOfferListBySpecialistScore(Long orderId) {
+        return offerRepository.findOfferListBySpecialistScore(orderId, OfferStatus.WAITING);
+    }
 
 
 }

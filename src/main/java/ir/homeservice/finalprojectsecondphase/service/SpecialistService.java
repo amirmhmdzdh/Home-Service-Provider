@@ -5,6 +5,9 @@ import ir.homeservice.finalprojectsecondphase.dto.request.SearchForUser;
 import ir.homeservice.finalprojectsecondphase.dto.request.SpecialistRegisterRequest;
 import ir.homeservice.finalprojectsecondphase.dto.response.FilterUserResponse;
 import ir.homeservice.finalprojectsecondphase.exception.*;
+import ir.homeservice.finalprojectsecondphase.mapper.OfferMapper;
+import ir.homeservice.finalprojectsecondphase.mapper.SpecialistMapper;
+import ir.homeservice.finalprojectsecondphase.mapper.SpecialistMappers;
 import ir.homeservice.finalprojectsecondphase.model.offer.Offer;
 import ir.homeservice.finalprojectsecondphase.model.offer.enums.OfferStatus;
 import ir.homeservice.finalprojectsecondphase.model.order.Orders;
@@ -125,24 +128,47 @@ public class SpecialistService {
                 .map(isActive -> criteriaBuilder.equal(specialistRoot.get("isActive"), isActive))
                 .ifPresent(predicateList::add);
 
+        Optional.ofNullable(search.getUserStatus())
+                .map(userStatus -> criteriaBuilder.equal(specialistRoot.get("userStatus"), userStatus))
+                .ifPresent(predicateList::add);
+
+//        if (search.getMinCredit() == 0 && search.getMaxCredit() != 0) {
+//            search.setMinCredit(0L);
+//        }
+//        if (search.getMinCredit() != 0 && search.getMaxCredit() == 0) {
+//            search.setMaxCredit(Long.MAX_VALUE);
+//        }
+//        if (search.getMinCredit() != 0 || search.getMaxCredit() != 0) {
+//            Predicate creditPredicate = criteriaBuilder.between(specialistRoot.get("credit"),
+//                    search.getMinCredit(), search.getMaxCredit());
+//            predicateList.add(creditPredicate);
+//        }
 
 
+        if (search.getMinScore() == null && search.getMaxScore() != null)
+            search.setMinScore(0.0);
+        if (search.getMinScore() != null && search.getMaxScore() == null)
+            search.setMaxScore(5.0);
+        if (search.getMinScore() != null && search.getMaxScore() != null)
+            predicateList.add(criteriaBuilder.between(specialistRoot.get("star"),
+                    search.getMinScore(), search.getMaxScore()));
 
+        if (search.getMinUserCreationAt() == null && search.getMaxUserCreationAt() != null) {
+            search.setMinUserCreationAt(LocalDateTime.now().minusYears(1));
+        }
+        if (search.getMinUserCreationAt() != null && search.getMaxUserCreationAt() == null) {
+            search.setMaxUserCreationAt(LocalDateTime.now());
+        }
+        if (search.getMinUserCreationAt() != null && search.getMaxUserCreationAt() != null) {
+            predicateList.add(criteriaBuilder.between(specialistRoot.get("registrationTime"),
+                    search.getMinUserCreationAt(), search.getMaxUserCreationAt()));
+        }
 
-
-
-
-
-
-
-
-
-
-
-
-        return null;
+        specialistCriteriaQuery.select(specialistRoot).where(criteriaBuilder.and(predicateList.toArray(new Predicate[0])));
+        List<Specialist> resultList = entityManager.createQuery(specialistCriteriaQuery).getResultList();
+        resultList.forEach(specialist -> filterUserResponse.add(SpecialistMappers.convertToFilterDTO(specialist)));
+        return filterUserResponse;
     }
-
 
     public Optional<Specialist> findById(Long id) {
         return specialistRepository.findById(id);

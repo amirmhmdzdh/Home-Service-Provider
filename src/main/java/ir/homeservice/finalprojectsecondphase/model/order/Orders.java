@@ -8,6 +8,8 @@ import ir.homeservice.finalprojectsecondphase.model.order.enums.OrderStatus;
 import ir.homeservice.finalprojectsecondphase.model.service.SubService;
 import ir.homeservice.finalprojectsecondphase.model.user.Customer;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.*;
@@ -30,15 +32,14 @@ public class Orders extends BaseEntity<Long> {
 
     private LocalDateTime executionTime;
 
-
     private LocalDateTime endTime;
 
 
-    @NotNull(message = "Filling it is mandatory")
+   // @NotNull(message = "Filling it is mandatory")
     private Long proposedPrice;
 
 
-    @Pattern(regexp = "^[a-zA-Z ]{5,}$", message = "Invalid Description!")
+    //@Pattern(regexp = "^[a-zA-Z ]{5,}$", message = "Invalid Description!")
     private String description;
 
 

@@ -15,23 +15,23 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 public class Address extends BaseEntity<Long> {
 
-    @Pattern(regexp = "^[a-zA-Z ]{3,}$", message = "Invalid Province!")
+   // @Pattern(regexp = "^[a-zA-Z ]{3,}$", message = "Invalid Province!")
     private String province;
 
 
-    @Pattern(regexp = "^[a-zA-Z ]{3,}$", message = "Invalid!")
+   // @Pattern(regexp = "^[a-zA-Z ]{3,}$", message = "Invalid!")
     private String city;
 
 
-    @Pattern(regexp = "^[a-zA-Z ]{3,}$", message = "Invalid Avenue")
+   // @Pattern(regexp = "^[a-zA-Z ]{3,}$", message = "Invalid Avenue")
     private String avenue;
 
 
-    @Pattern(regexp = "^\\d{1,4}$", message = "Invalid House Number")
+   // @Pattern(regexp = "^\\d{1,4}$", message = "Invalid House Number")
     private String houseNumber;
 
 
-    @ManyToOne
+    @OneToOne
     private Customer customer;
 
 

@@ -18,7 +18,7 @@ import java.util.List;
 @ToString
 public class MainService extends BaseEntity<Long> {
 
-    @Pattern(regexp = "^[a-zA-Z ]{3,}$", message = "Invalid name!")
+   // @Pattern(regexp = "^[a-zA-Z ]{3,}$", message = "Invalid name!")
     @Column(unique = true)
     private String name;
 
@@ -26,8 +26,4 @@ public class MainService extends BaseEntity<Long> {
             CascadeType.PERSIST, CascadeType.REFRESH}, fetch = FetchType.EAGER)
     @ToString.Exclude
     private List<SubService> subServicesList;
-
-    public MainService(String name) {
-        this.name = name;
-    }
 }

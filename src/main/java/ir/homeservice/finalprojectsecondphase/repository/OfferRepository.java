@@ -1,5 +1,6 @@
 package ir.homeservice.finalprojectsecondphase.repository;
 
+import ir.homeservice.finalprojectsecondphase.dto.response.OfferResponse;
 import ir.homeservice.finalprojectsecondphase.model.offer.Offer;
 import ir.homeservice.finalprojectsecondphase.model.offer.enums.OfferStatus;
 import org.springframework.data.jpa.repository.JpaRepository;

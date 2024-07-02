@@ -17,18 +17,18 @@ import java.util.Optional;
 public class OrderService {
     private final OrderRepository orderRepository;
 
-    public void chooseOffer(Orders orders, Long offerId) {
+    public Orders chooseOffer(Orders orders, Long offerId) {
         orders.getOfferList().forEach(offer -> {
             if (offer.getId().equals(offerId))
                 offer.setOfferStatus(OfferStatus.ACCEPTED);
         });
         orders.setOrderStatus(OrderStatus.WAITING_FOR_SPECIALIST_TO_COME);
-        orderRepository.save(orders);
+        return orderRepository.save(orders);
     }
 
 
-    public void save(Orders order) {
-        orderRepository.save(order);
+    public Orders save(Orders order) {
+        return orderRepository.save(order);
     }
 
     public Optional<Orders> findById(Long orders) {

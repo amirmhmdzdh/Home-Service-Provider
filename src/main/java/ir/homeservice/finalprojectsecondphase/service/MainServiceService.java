@@ -20,8 +20,8 @@ public class MainServiceService {
         return mainServiceRepository.findByName(mainService);
     }
 
-    public void save(MainService mainService) {
-        mainServiceRepository.save(mainService);
+    public MainService save(MainService mainService) {
+        return mainServiceRepository.save(mainService);
     }
 
     public List<MainService> findAllMainService() {
@@ -30,4 +30,10 @@ public class MainServiceService {
             throw new MainServicesIsExistException("there are no main main service!");
         return mainServiceList;
     }
+
+    public MainService getReferenceById(Long id) {
+        return mainServiceRepository.getReferenceById(id);
+    }
+
+
 }

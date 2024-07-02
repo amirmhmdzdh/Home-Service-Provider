@@ -16,8 +16,8 @@ import java.util.Optional;
 public class SubServiceService {
     private final SubServicesRepository subServicesRepository;
 
-    public void save(SubService subService) {
-        subServicesRepository.save(subService);
+    public SubService save(SubService subService) {
+        return subServicesRepository.save(subService);
     }
 
     public Optional<SubService> findById(Long service) {

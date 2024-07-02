@@ -4,7 +4,6 @@ import ir.homeservice.finalprojectsecondphase.model.offer.Offer;
 import ir.homeservice.finalprojectsecondphase.model.service.SubService;
 import ir.homeservice.finalprojectsecondphase.model.user.enums.SpecialistStatus;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -22,9 +21,8 @@ public class Specialist extends Users {
     @Lob
     private byte[] image;
 
-    private Integer star;
+    private Double star;
 
-    @NotNull(message = "Filling it is mandatory")
     private Long credit;
 
     @Enumerated(value = EnumType.STRING)
@@ -41,6 +39,8 @@ public class Specialist extends Users {
     @ToString.Exclude
     private List<Offer> offerList;
 
+    private Boolean isActive;
+
     public void addSubServices(SubService subServices) {
         this.subServicesList.add(subServices);
         subServices.getSpecialistList().add(this);
@@ -50,4 +50,20 @@ public class Specialist extends Users {
         this.subServicesList.remove(subServices);
         subServices.getSpecialistList().remove(this);
     }
+
+    public void delay(double hours) {
+        double updateStar = star - hours;
+        checkRate(updateStar);
+    }
+
+    private void checkRate(double updatedStar) {
+        if (updatedStar < 0) {
+            setIsActive(false);
+            setStatus(SpecialistStatus.AWAITING);
+            setStar(0d);
+        } else
+            setStar(updatedStar);
+    }
+
+
 }

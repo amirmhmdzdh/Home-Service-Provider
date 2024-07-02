@@ -20,15 +20,15 @@ import java.util.List;
 @SuperBuilder
 public class SubService extends BaseEntity<Long> {
 
-    @Pattern(regexp = "^[a-zA-Z ]{3,}$", message = "Invalid name!")
+   // @Pattern(regexp = "^[a-zA-Z ]{3,}$", message = "Invalid name!")
     @Column(unique = true)
     private String name;
 
-    @NotNull(message = "Filling it is mandatory")
+   // @NotNull(message = "Filling it is mandatory")
     private Long basePrice;
 
 
-    @Pattern(regexp = "^[a-zA-Z ]{5,}$", message = "Invalid Description!")
+   // @Pattern(regexp = "^[a-zA-Z ]{5,}$", message = "Invalid Description!")
     private String description;
 
     @ManyToOne
