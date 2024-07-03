@@ -32,6 +32,7 @@ public class PaymentRequest {
     String year;
     @NotNull
     String month;
+    //String password;
     @Valid
     CustomerIdOrderId customerIdOrderId;
 }
