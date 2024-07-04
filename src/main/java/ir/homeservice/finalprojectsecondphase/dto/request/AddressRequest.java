@@ -1,9 +1,14 @@
 package ir.homeservice.finalprojectsecondphase.dto.request;
 
-public record AddressRequest(String province,
-                             String city,
-                             String avenue,
-                             String houseNumber) {
+import jakarta.validation.constraints.Pattern;
 
-
+public record AddressRequest(
+        @Pattern(regexp = "^[a-zA-Z ]{3,}$")
+        String province,
+        @Pattern(regexp = "^[a-zA-Z ]{3,}$")
+        String city,
+        @Pattern(regexp = "^[a-zA-Z ]{3,}$")
+        String avenue,
+        @Pattern(regexp = "^\\d{1,4}$")
+        String houseNumber) {
 }
