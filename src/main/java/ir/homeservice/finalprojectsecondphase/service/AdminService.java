@@ -79,7 +79,7 @@ public class AdminService {
         if (specialist.getStatus().equals(SpecialistStatus.CONFIRMED))
             throw new DuplicateInformationException("this specialist is currently certified!");
         specialist.setStatus(SpecialistStatus.CONFIRMED);
-       return specialistService.save(specialist);
+        return specialistService.save(specialist);
     }
 
     public Specialist addSpecialistToSubService(Long subServiceId, Long specialistId) {
@@ -92,7 +92,7 @@ public class AdminService {
         if (specialist.getSubServicesList().contains(subService))
             throw new DuplicateInformationException("the subService is Duplicate");
         specialist.addSubServices(subService);
-       return specialistService.save(specialist);
+        return specialistService.save(specialist);
     }
 
     public void deleteSubServicesFromSpecialist(Long subServiceId, Long specialistId) {
@@ -117,5 +117,8 @@ public class AdminService {
         }
         return filterUserResponseList;
     }
-}
 
+    public List<MainService> findAllMainService() {
+        return mainServiceService.findAllMainService();
+    }
+}
