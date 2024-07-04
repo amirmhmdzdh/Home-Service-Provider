@@ -1,16 +1,14 @@
 package ir.homeservice.finalprojectsecondphase.controller;
 
 import ir.homeservice.finalprojectsecondphase.dto.request.*;
-import ir.homeservice.finalprojectsecondphase.dto.response.FilterUserResponse;
-import ir.homeservice.finalprojectsecondphase.dto.response.MainServiceResponse;
-import ir.homeservice.finalprojectsecondphase.dto.response.SubServiceResponse;
-import ir.homeservice.finalprojectsecondphase.dto.response.UserResponseToLogin;
+import ir.homeservice.finalprojectsecondphase.dto.response.*;
 import ir.homeservice.finalprojectsecondphase.mapper.AdminLoginMapper;
 import ir.homeservice.finalprojectsecondphase.mapper.MainServiceMapper;
 import ir.homeservice.finalprojectsecondphase.mapper.SubServiceMapper;
 import ir.homeservice.finalprojectsecondphase.model.service.MainService;
 import ir.homeservice.finalprojectsecondphase.model.service.SubService;
 import ir.homeservice.finalprojectsecondphase.model.user.Admin;
+import ir.homeservice.finalprojectsecondphase.model.user.Specialist;
 import ir.homeservice.finalprojectsecondphase.service.AdminService;
 
 import jakarta.validation.Valid;
@@ -32,9 +30,9 @@ public class AdminController {
     @GetMapping("/login-admin")
     public ResponseEntity<UserResponseToLogin> signInAdmin(@RequestBody UserRequestToLogin request) {
 
-        AdminLoginMapper.INSTANCE.signInAdminRequestToModel(request);
+        Admin admin = AdminLoginMapper.INSTANCE.signInAdminRequestToModel(request);
 
-        Admin signInAdmin = adminService.signInAdmin(request.email(), request.password());
+        Admin signInAdmin = adminService.signInAdmin(admin.getEmail(), admin.getPassword());
 
         UserResponseToLogin userResponseToLogin = modelMapper.map(signInAdmin, UserResponseToLogin.class);
 
@@ -53,7 +51,7 @@ public class AdminController {
     }
 
     @PostMapping("/add-subServices")
-    public ResponseEntity<SubServiceResponse> addSubServices(@RequestBody SubServiceRequest request) {
+    public ResponseEntity<SubServiceResponse> addSubServices(@Valid @RequestBody SubServiceRequest request) {
 
         SubService requestToModel = SubServiceMapper.INSTANCE.subServiceSaveRequestToModel(request);
 
@@ -65,7 +63,7 @@ public class AdminController {
     }
 
     @PutMapping("/update-SubService")
-    public ResponseEntity<SubServiceResponse> updateSubServices(@RequestBody UpdateSubServiceRequest request) {
+    public ResponseEntity<SubServiceResponse> updateSubServices(@Valid @RequestBody UpdateSubServiceRequest request) {
 
         SubService requestToModel = SubServiceMapper.INSTANCE.UpdateSubServiceRequestToModel(request);
 
@@ -78,25 +76,40 @@ public class AdminController {
     }
 
     @PutMapping("/confirm-Specialist/{specialistId}")
-    public ResponseEntity<String> confirmSpecialist(@PathVariable Long specialistId) {
-        adminService.confirmSpecialist(specialistId);
-        return new ResponseEntity<>(HttpStatus.OK);
+    public ResponseEntity<SpecialistResponseRegister> confirmSpecialist(@PathVariable Long specialistId) {
+
+        Specialist specialist = adminService.confirmSpecialist(specialistId);
+
+        SpecialistResponseRegister map = modelMapper.map(specialist, SpecialistResponseRegister.class);
+
+        return new ResponseEntity<>(map, HttpStatus.ACCEPTED);
     }
 
     @PutMapping("/add-Specialist-To-SubService/{subServiceId}/{specialistId}")
-    public ResponseEntity<String> addSpecialistToSubService(@PathVariable Long subServiceId, @PathVariable Long specialistId) {
-        adminService.addSpecialistToSubService(subServiceId, specialistId);
-        return new ResponseEntity<>(HttpStatus.CREATED);
+    public ResponseEntity<SpecialistResponseRegister> addSpecialistToSubService(
+            @PathVariable Long subServiceId, @PathVariable Long specialistId) {
+
+        Specialist specialist = adminService.addSpecialistToSubService(subServiceId, specialistId);
+
+        SpecialistResponseRegister map = modelMapper.map(specialist, SpecialistResponseRegister.class);
+
+        return new ResponseEntity<>(map, HttpStatus.ACCEPTED);
     }
 
     @DeleteMapping("/delete-SubServices-From-Specialist/{subServiceId}/{specialistId}")
-    public ResponseEntity<String> deleteSubServicesFromSpecialist(@PathVariable Long subServiceId, @PathVariable Long specialistId) {
+    public ResponseEntity<String> deleteSubServicesFromSpecialist(
+            @PathVariable Long subServiceId, @PathVariable Long specialistId) {
         adminService.deleteSubServicesFromSpecialist(subServiceId, specialistId);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }
 
     @PostMapping("/search")
     public List<FilterUserResponse> search(@RequestBody SearchForUser search) {
         return adminService.searchUser(search);
+    }
+
+    @GetMapping("/show-all-services")
+    public List<MainService> findAllMainServices() {
+        return adminService.findAllMainService();
     }
 }
