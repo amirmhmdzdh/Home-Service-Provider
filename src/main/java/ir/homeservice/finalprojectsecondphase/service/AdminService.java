@@ -73,16 +73,16 @@ public class AdminService {
     }
 
 
-    public void confirmSpecialist(Long specialistId) {
+    public Specialist confirmSpecialist(Long specialistId) {
         Specialist specialist = specialistService.findById(specialistId)
                 .orElseThrow(() -> new NotFoundException("This specialist does not exist!"));
         if (specialist.getStatus().equals(SpecialistStatus.CONFIRMED))
             throw new DuplicateInformationException("this specialist is currently certified!");
         specialist.setStatus(SpecialistStatus.CONFIRMED);
-        specialistService.save(specialist);
+       return specialistService.save(specialist);
     }
 
-    public void addSpecialistToSubService(Long subServiceId, Long specialistId) {
+    public Specialist addSpecialistToSubService(Long subServiceId, Long specialistId) {
         SubService subService = subServiceService.findById(subServiceId)
                 .orElseThrow(() -> new NotFoundException("This subService does not exist!"));
         Specialist specialist = specialistService.findById(specialistId)
@@ -92,7 +92,7 @@ public class AdminService {
         if (specialist.getSubServicesList().contains(subService))
             throw new DuplicateInformationException("the subService is Duplicate");
         specialist.addSubServices(subService);
-        specialistService.save(specialist);
+       return specialistService.save(specialist);
     }
 
     public void deleteSubServicesFromSpecialist(Long subServiceId, Long specialistId) {
