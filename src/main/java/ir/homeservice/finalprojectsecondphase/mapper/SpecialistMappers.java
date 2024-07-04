@@ -8,17 +8,16 @@ import org.springframework.stereotype.Component;
 public class SpecialistMappers {
 
     public static FilterUserResponse convertToFilterDTO(Specialist specialist) {
-        return new FilterUserResponse(
-                specialist.getId(),
-                specialist.getFirstName(),
-                specialist.getLastName(),
-                specialist.getEmail(),
-                specialist.getCredit(),
-                specialist.getRole().name(),
-                specialist.getStatus().name(),
-                specialist.getIsActive(),
-                specialist.getRegistrationTime(),
-                specialist.getStar()
-        );
+        return FilterUserResponse.builder()
+                .userId(specialist.getId())
+                .firstname(specialist.getFirstName())
+                .lastname(specialist.getLastName())
+                .email(specialist.getEmail())
+                .credit(specialist.getCredit())
+                .userType(specialist.getRole().name())
+                .userStatus(specialist.getStatus().name())
+                .userCreationDate(specialist.getRegistrationTime())
+                .star_JustForSpecialist(specialist.getStar())
+                .build();
     }
 }
