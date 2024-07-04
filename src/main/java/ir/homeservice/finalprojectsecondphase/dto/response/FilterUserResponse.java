@@ -13,26 +13,13 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class FilterUserResponse {
 
-    Long userId;
-    String firstname;
-    String lastname;
-    String email;
-    Long credit;
-    String userType;
-    String userStatus;
-    Boolean isActive;
-    LocalDateTime userCreationDate;
-    Double star_JustForSpecialist;
-
-    public FilterUserResponse(Long id, String firstName, String lastName, String email, Long credit, String userType, LocalDateTime registrationTime) {
-        this.userId = id;
-        this.firstname = firstName;
-        this.lastname = lastName;
-        this.email = email;
-        this.credit = credit;
-        this.userType = userType;
-        this.isActive = true;
-        this.userCreationDate = registrationTime;
-
-    }
+    private Long userId;
+    private String firstname;
+    private String lastname;
+    private String email;
+    private Long credit;
+    private String userType;
+    private String userStatus;
+    private LocalDateTime userCreationDate;
+    private Double star_JustForSpecialist;
 }
