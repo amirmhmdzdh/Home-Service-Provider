@@ -108,8 +108,14 @@ public class AdminController {
         return adminService.searchUser(search);
     }
 
-    @GetMapping("/show-all-services")
+    @GetMapping("/show-all-MainService")
     public List<MainService> findAllMainServices() {
         return adminService.findAllMainService();
     }
+
+    @GetMapping("/show-all-SubService")
+    public List<SubService> findAllSubServices() {
+        return adminService.findAllSubService();
+    }
+
 }

@@ -11,7 +11,7 @@ import org.mapstruct.factory.Mappers;
 public interface OfferMapper {
 
     OfferMapper INSTANCE = Mappers.getMapper(OfferMapper.class);
-
+    @Mapping(source = "orderId", target = "orders.id")
     Offer offerSaveRequestToModel(OfferRequest request);
 
     @Mapping(source = "orders.id", target = "ordersId")

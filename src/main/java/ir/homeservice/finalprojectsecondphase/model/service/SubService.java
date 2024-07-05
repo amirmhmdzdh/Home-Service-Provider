@@ -4,8 +4,6 @@ import ir.homeservice.finalprojectsecondphase.model.baseentity.BaseEntity;
 import ir.homeservice.finalprojectsecondphase.model.order.Orders;
 import ir.homeservice.finalprojectsecondphase.model.user.Specialist;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 

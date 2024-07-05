@@ -8,10 +8,7 @@ import ir.homeservice.finalprojectsecondphase.model.order.enums.OrderStatus;
 import ir.homeservice.finalprojectsecondphase.model.service.SubService;
 import ir.homeservice.finalprojectsecondphase.model.user.Customer;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Future;
-import jakarta.validation.constraints.FutureOrPresent;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
+
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 

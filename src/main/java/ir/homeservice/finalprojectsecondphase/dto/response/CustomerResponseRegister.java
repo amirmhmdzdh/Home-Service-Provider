@@ -23,5 +23,14 @@ public class CustomerResponseRegister {
 
     private Long credit;
 
+    private Long addressId;
+
+    private String addressProvince;
+
+    private String addressCity;
+
+    private String addressAvenue;
+
+    private String addressHouseNumber;
 
 }

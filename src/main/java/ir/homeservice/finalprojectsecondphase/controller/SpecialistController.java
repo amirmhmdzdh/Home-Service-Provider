@@ -12,6 +12,7 @@ import ir.homeservice.finalprojectsecondphase.mapper.SpecialistMapper;
 import ir.homeservice.finalprojectsecondphase.model.offer.Offer;
 import ir.homeservice.finalprojectsecondphase.model.user.Specialist;
 import ir.homeservice.finalprojectsecondphase.service.SpecialistService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
@@ -25,13 +26,15 @@ public class SpecialistController {
     private final ModelMapper modelMapper;
 
     @PostMapping("/register-Specialist")
-    public ResponseEntity<SpecialistResponseRegister> signUp(@RequestBody SpecialistRegisterRequest request, String image) {
+    public ResponseEntity<SpecialistResponseRegister> signUp
+            (@Valid @RequestBody SpecialistRegisterRequest request, String image) {
 
-        SpecialistMapper.INSTANCE.registerSpecialistToModel(request);
+        Specialist model = SpecialistMapper.INSTANCE.registerSpecialistToModel(request);
 
-        Specialist specialist = specialistService.signUpSpecialist(request, image);
+        Specialist specialist = specialistService.signUpSpecialist(model, image);
 
-        SpecialistResponseRegister specialistResponseRegister = modelMapper.map(specialist, SpecialistResponseRegister.class);
+        SpecialistResponseRegister specialistResponseRegister = modelMapper
+                .map(specialist, SpecialistResponseRegister.class);
 
         return new ResponseEntity<>(specialistResponseRegister, HttpStatus.CREATED);
     }
@@ -39,21 +42,24 @@ public class SpecialistController {
     @GetMapping("/signIn-Specialist")
     public ResponseEntity<SpecialistResponseRegister> signIn(@RequestBody SpecialistSignInRequest request) {
 
-        SpecialistMapper.INSTANCE.signInSpecialistToModel(request);
+        Specialist model = SpecialistMapper.INSTANCE.signInSpecialistToModel(request);
 
-        Specialist specialist = specialistService.signInSpecialist(request.email(), request.password());
+        Specialist specialist = specialistService.signInSpecialist(model.getEmail(), model.getPassword());
 
-        SpecialistResponseRegister specialistResponseRegister = modelMapper.map(specialist, SpecialistResponseRegister.class);
+        SpecialistResponseRegister specialistResponseRegister = modelMapper
+                .map(specialist, SpecialistResponseRegister.class);
 
         return new ResponseEntity<>(specialistResponseRegister, HttpStatus.FOUND);
     }
 
     @PutMapping("/change-Password-Specialist")
-    public ResponseEntity<UserChangePasswordResponse> changePasswordSpecialist(@RequestBody UserChangePasswordRequest request) {
+    public ResponseEntity<UserChangePasswordResponse> changePasswordSpecialist
+            (@Valid @RequestBody UserChangePasswordRequest request) {
 
-        SpecialistMapper.INSTANCE.requestDtoToModelToChangePassword(request);
+       SpecialistMapper.INSTANCE.requestDtoToModelToChangePassword(request);
 
-        Specialist specialist = specialistService.changePasswordSpecialist(request.email(), request.oldPassword(), request.newPassword());
+        Specialist specialist = specialistService
+                .changePasswordSpecialist(request.email(), request.oldPassword(), request.newPassword());
 
         UserChangePasswordResponse changePasswordResponse = modelMapper.map(specialist, UserChangePasswordResponse.class);
 
@@ -61,7 +67,8 @@ public class SpecialistController {
     }
 
     @PostMapping("/add-Offer-for-order/{specialistId}")
-    public ResponseEntity<OfferResponse> addOfferForOrder(@RequestBody OfferRequest request, @PathVariable Long specialistId) {
+    public ResponseEntity<OfferResponse> addOfferForOrder
+            (@Valid @RequestBody OfferRequest request, @PathVariable Long specialistId) {
 
         OfferMapper.INSTANCE.offerSaveRequestToModel(request);
 
@@ -71,6 +78,9 @@ public class SpecialistController {
 
         return new ResponseEntity<>(map, HttpStatus.CREATED);
     }
-
+    @GetMapping("/show-specialist-star/{specialistId}")
+    public Double viewWorkerCredit(@PathVariable Long specialistId) {
+        return specialistService.getSpecialistRate(specialistId);
+    }
 
 }

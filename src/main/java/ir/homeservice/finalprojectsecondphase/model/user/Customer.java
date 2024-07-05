@@ -22,12 +22,6 @@ public class Customer extends Users {
     @NotNull(message = "Recharging the wallet is required!")
     private Long credit;
 
-//    @OneToMany(mappedBy = "customer",
-//            cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH}
-//            , fetch = FetchType.EAGER)
-//    @ToString.Exclude
-//    private List<Address> addressList;
-
     @OneToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     private Address address;
 
@@ -37,13 +31,5 @@ public class Customer extends Users {
             fetch = FetchType.EAGER)
     @ToString.Exclude
     private List<Orders> ordersList;
-
-//    public void addAddress(Address address) {
-//        if (addressList == null) {
-//            addressList = new ArrayList<>();
-//        }
-//        address.setCustomer(this);
-//        addressList.add(address);
-//    }
 }
 

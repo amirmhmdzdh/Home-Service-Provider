@@ -5,7 +5,6 @@ import ir.homeservice.finalprojectsecondphase.model.offer.enums.OfferStatus;
 import ir.homeservice.finalprojectsecondphase.model.order.Orders;
 import ir.homeservice.finalprojectsecondphase.model.user.Specialist;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 

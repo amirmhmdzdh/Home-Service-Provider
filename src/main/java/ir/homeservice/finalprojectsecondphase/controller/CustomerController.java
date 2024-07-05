@@ -11,12 +11,14 @@ import ir.homeservice.finalprojectsecondphase.model.offer.Offer;
 import ir.homeservice.finalprojectsecondphase.model.order.Orders;
 import ir.homeservice.finalprojectsecondphase.model.user.Customer;
 import ir.homeservice.finalprojectsecondphase.service.CustomerService;
-import ir.homeservice.finalprojectsecondphase.service.OrderService;
+import ir.homeservice.finalprojectsecondphase.utill.Validation;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -26,11 +28,12 @@ import java.util.stream.Collectors;
 @RestController
 @RequiredArgsConstructor
 public class CustomerController {
-    private final CustomerService customerService;
+    private final Validation validation;
     private final ModelMapper modelMapper;
+    private final CustomerService customerService;
 
     @PostMapping("/register-Customer")
-    public ResponseEntity<CustomerResponseRegister> signUp(@RequestBody CustomerRequest request) {
+    public ResponseEntity<CustomerResponseRegister> signUp(@Valid @RequestBody CustomerRequest request) {
 
         CustomerMapper.INSTANCE.registerCustomerToModel(request);
 
@@ -44,9 +47,9 @@ public class CustomerController {
     @GetMapping("/signIn-Customer")
     public ResponseEntity<CustomerResponseRegister> signIn(@RequestBody CustomerRequestSignIn request) {
 
-        CustomerMapper.INSTANCE.signInCustomerToModel(request);
+        Customer toModel = CustomerMapper.INSTANCE.signInCustomerToModel(request);
 
-        Customer customer = customerService.signInCustomer(request);
+        Customer customer = customerService.signInCustomer(toModel);
 
         CustomerResponseRegister customerResponseRegister = modelMapper.map(customer, CustomerResponseRegister.class);
 
@@ -54,19 +57,23 @@ public class CustomerController {
     }
 
     @PutMapping("/change-Password-Customer")
-    public ResponseEntity<UserChangePasswordResponse> changePassword(@RequestBody UserChangePasswordRequest request) {
+    public ResponseEntity<UserChangePasswordResponse> changePassword
+            (@Valid @RequestBody UserChangePasswordRequest request) {
 
         CustomerMapper.INSTANCE.requestDtoToModelToChangePassword(request);
 
-        Customer customer = customerService.changePassword(request.email(), request.oldPassword(), request.newPassword());
+        Customer customer = customerService.changePassword(
+                request.email(), request.oldPassword(), request.newPassword());
 
-        UserChangePasswordResponse userChangePasswordResponse = modelMapper.map(customer, UserChangePasswordResponse.class);
+        UserChangePasswordResponse userChangePasswordResponse = modelMapper.map(
+                customer, UserChangePasswordResponse.class);
 
         return new ResponseEntity<>(userChangePasswordResponse, HttpStatus.OK);
     }
 
     @PostMapping("/add-Order/{customerId}")
-    public ResponseEntity<OrderResponse> addOrders(@PathVariable Long customerId, @RequestBody OrdersRequest request) {
+    public ResponseEntity<OrderResponse> addOrders
+            (@PathVariable Long customerId, @Valid @RequestBody OrdersRequest request) {
 
         OrderMapper.INSTANCE.requestDtoToModelToAddOrder(request);
 
@@ -85,11 +92,11 @@ public class CustomerController {
         OfferResponse map = modelMapper.map(orders, OfferResponse.class);
 
         return new ResponseEntity<>(map, HttpStatus.OK);
-
     }
 
     @GetMapping("/show-all-offer-by-price/{orderId}/{customerId}")
-    public List<OfferResponse> showAllOfferForOrderByProposedPrice(@PathVariable Long orderId, @PathVariable Long customerId) {
+    public List<OfferResponse> showAllOfferForOrderByProposedPrice
+            (@PathVariable Long orderId, @PathVariable Long customerId) {
         List<Offer> offerListByProposedPrice = customerService.findOfferListByProposedPrice(orderId, customerId);
         OfferResponseMapper mapper = new OfferResponseMapper();
         return offerListByProposedPrice.stream()
@@ -127,7 +134,8 @@ public class CustomerController {
     }
 
     @GetMapping("/increase-account-balance/{customerId}/{credit}")
-    public ResponseEntity<CustomerResponseRegister> increaseAccountBalance(@PathVariable Long customerId, @PathVariable Long credit) {
+    public ResponseEntity<CustomerResponseRegister> increaseAccountBalance
+            (@PathVariable Long customerId, @PathVariable Long credit) {
 
         Customer customer = customerService.increaseCustomerCredit(customerId, credit);
 
@@ -137,7 +145,8 @@ public class CustomerController {
     }
 
     @PutMapping("/paid-in-app-credit/{orderId}/{customerId}")
-    public ResponseEntity<CustomerResponseRegister> payByInApp(@PathVariable Long orderId, @PathVariable Long customerId) {
+    public ResponseEntity<CustomerResponseRegister> payByInApp
+            (@PathVariable Long orderId, @PathVariable Long customerId) {
 
         Customer customer = customerService.paidByInAppCredit(orderId, customerId);
 
@@ -152,7 +161,8 @@ public class CustomerController {
     }
 
     @PostMapping("/send-payment-info")
-    public ResponseEntity<CustomerResponseRegister> paymentInfo(@ModelAttribute PaymentRequest request) {
+    public ResponseEntity<CustomerResponseRegister> paymentInfo(@ModelAttribute @Validated PaymentRequest request) {
+        validation.checkPaymentRequest(request);
 
         Customer customer = customerService.changeOrderStatusToPaidByOnlinePayment(request.getCustomerIdOrderId());
 
@@ -162,11 +172,12 @@ public class CustomerController {
     }
 
     @PostMapping("/register-Comment/{orderId}/{customerId}")
-    public ResponseEntity<CommentResponse> registerComment(@RequestBody CommentRequest request,@PathVariable Long orderId, @PathVariable Long customerId) {
+    public ResponseEntity<CommentResponse> registerComment
+            (@Valid @RequestBody CommentRequest request, @PathVariable Long orderId, @PathVariable Long customerId) {
 
         CommentMapper.INSTANCE.registerCommentToModel(request);
 
-        Comment comment = customerService.registerComment(request,orderId, customerId);
+        Comment comment = customerService.registerComment(request, orderId, customerId);
 
         CommentResponse map = modelMapper.map(comment, CommentResponse.class);
 

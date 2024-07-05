@@ -1,6 +1,5 @@
 package ir.homeservice.finalprojectsecondphase.service;
 
-import ir.homeservice.finalprojectsecondphase.dto.response.OfferResponse;
 import ir.homeservice.finalprojectsecondphase.model.offer.Offer;
 import ir.homeservice.finalprojectsecondphase.model.offer.enums.OfferStatus;
 import ir.homeservice.finalprojectsecondphase.repository.OfferRepository;

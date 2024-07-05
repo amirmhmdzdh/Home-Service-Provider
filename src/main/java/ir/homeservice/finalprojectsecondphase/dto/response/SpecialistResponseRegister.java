@@ -1,9 +1,7 @@
 package ir.homeservice.finalprojectsecondphase.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import ir.homeservice.finalprojectsecondphase.model.user.enums.SpecialistStatus;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 @Getter
@@ -11,10 +9,10 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder
-
 public class SpecialistResponseRegister {
     private Long id;
     private String firstName;
     private String lastName;
     private String email;
+    private SpecialistStatus status;
 }

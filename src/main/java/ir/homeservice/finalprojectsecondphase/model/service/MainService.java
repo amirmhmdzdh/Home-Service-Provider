@@ -3,7 +3,6 @@ package ir.homeservice.finalprojectsecondphase.model.service;
 
 import ir.homeservice.finalprojectsecondphase.model.baseentity.BaseEntity;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Pattern;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 

@@ -11,7 +11,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OfferResponse {
-    private Long offerId;
+
+    private Long id;
     private LocalDateTime sendTime;
     private Long ordersId;
     private Long proposedPrice;

@@ -18,7 +18,6 @@ import ir.homeservice.finalprojectsecondphase.model.user.Customer;
 import ir.homeservice.finalprojectsecondphase.model.user.Specialist;
 import ir.homeservice.finalprojectsecondphase.model.user.enums.Role;
 import ir.homeservice.finalprojectsecondphase.repository.CustomerRepository;
-import ir.homeservice.finalprojectsecondphase.repository.SpecialistRepository;
 import ir.homeservice.finalprojectsecondphase.utill.CaptchaUtil;
 import ir.homeservice.finalprojectsecondphase.utill.Validation;
 import jakarta.persistence.EntityManager;
@@ -40,21 +39,19 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 @Transactional
+@RequiredArgsConstructor
 public class CustomerService {
-
-    private final CustomerRepository customerRepository;
-    private final AddressService addressService;
-    private final OrderService orderService;
-    private final SubServiceService subServiceService;
     private final Validation validation;
+    private final OrderService orderService;
     private final OfferService offerService;
-    private final SpecialistService specialistService;
-    private final CommentService commentService;
-    private final SpecialistRepository specialistRepository;
     @PersistenceContext
     private final EntityManager entityManager;
+    private final AddressService addressService;
+    private final CommentService commentService;
+    private final SubServiceService subServiceService;
+    private final SpecialistService specialistService;
+    private final CustomerRepository customerRepository;
 
     public Customer signUpCustomer(CustomerRequest customer) {
         Address address = Address.builder().province(customer.request().province()).city(customer.request().city())
@@ -76,8 +73,8 @@ public class CustomerService {
         return insertCustomer;
     }
 
-    public Customer signInCustomer(CustomerRequestSignIn requestSignIn) {
-        return customerRepository.findByEmailAndPassword(requestSignIn.email(), requestSignIn.password())
+    public Customer signInCustomer(Customer requestSignIn) {
+        return customerRepository.findByEmailAndPassword(requestSignIn.getEmail(), requestSignIn.getPassword())
                 .orElseThrow(() -> new NotFoundException("This customer does not exist!"));
     }
 
@@ -105,13 +102,14 @@ public class CustomerService {
                 .description(request.description()).subServices(subService).orderStatus(OrderStatus.WAITING_FOR_SPECIALIST_SUGGESTION)
                 .executionTime(request.workStartDate()).endTime(request.workEndDate())
                 .customer(customer).address(customer.getAddress()).proposedPrice(request.proposedPrice()).build();
+        validation.validateTime(orders);
         return orderService.save(orders);
     }
 
     public void addAddress(Address address, Customer customer) {
-        Optional<Customer> customerOptional = customerRepository.findById(customer.getId());
-        address.setCustomer(customerOptional.get());
-        customerOptional.get().setAddress(address);
+        Customer customer1 = customerRepository.getReferenceById(customer.getId());
+        address.setCustomer(customer1);
+        customer1.setAddress(address);
         addressService.createAddress(address);
     }
 
@@ -156,11 +154,6 @@ public class CustomerService {
         optionalOrders.get().setOrderStatus(OrderStatus.STARTED);
         return orderService.save(optionalOrders.get());
     }
-
-    public Optional<Customer> findByEmail(String email) {
-        return customerRepository.findByEmail(email);
-    }
-
     public Orders changeOrderStatusToDone(Long orderId, Long customerId) {
         Customer customer = customerRepository.getReferenceById(customerId);
         validation.checkOwnerOfTheOrder(orderId, customer);
@@ -240,7 +233,6 @@ public class CustomerService {
         CustomerIdOrderId customerIdOrderId = new CustomerIdOrderId(orders.getId(), customer.getId());
         paymentPageDTO.setCustomerIdOrderId(customerIdOrderId);
         paymentPageDTO.setPrice(paymentPriceCalculator(orders.getId()));
-        //  accounting(orders);
         setupCaptcha(paymentPageDTO);
         model.addAttribute("dto", paymentPageDTO);
         return new ModelAndView("payment");
@@ -251,10 +243,10 @@ public class CustomerService {
         OrderStatus orderStatus = order.get().getOrderStatus();
         if (!orderStatus.equals(OrderStatus.DONE)) {
             if (orderStatus.equals(OrderStatus.PAID))
-                throw new OrderStatusException(
-                        "the cost of this order has already been \"PAID\"!");
+                throw new NotFoundException(
+                        "the cost of this order has already been PAID!");
             else
-                throw new OrderStatusException(
+                throw new NotFoundException(
                         "This order has not yet reached the payment stage, this order is in the " +
                                 orderStatus + " stage!");
         }
@@ -327,9 +319,6 @@ public class CustomerService {
                 .map(email -> criteriaBuilder.equal(customerRoot.get("email"), email))
                 .ifPresent(predicateList::add);
 
-        Optional.ofNullable(customerSearch.getIsActive())
-                .map(isActive -> criteriaBuilder.equal(customerRoot.get("isActive"), isActive))
-                .ifPresent(predicateList::add);
 
         if (customerSearch.getMinUserCreationAt() == null && customerSearch.getMaxUserCreationAt() != null) {
             customerSearch.setMinUserCreationAt(LocalDateTime.now().minusYears(1));
@@ -341,6 +330,7 @@ public class CustomerService {
             predicateList.add(criteriaBuilder.between(customerRoot.get("registrationTime"),
                     customerSearch.getMinUserCreationAt(), customerSearch.getMaxUserCreationAt()));
         }
+
 
 //        if (customerSearch.getMinCredit() == 0 && customerSearch.getMaxCredit() != 0) {
 //            customerSearch.setMinCredit(0L);
@@ -360,15 +350,11 @@ public class CustomerService {
         resultList.forEach(customer -> filterUserResponse.add(CustomerMappers.convertToFilterDTO(customer)));
         return filterUserResponse;
     }
+    public Optional<Customer> findByEmail(String email) {
+        return customerRepository.findByEmail(email);
+    }
 }
 
-
-//        Optional.ofNullable(customerSearch.getIsActive())
-//                .map(isActive -> criteriaBuilder.isTrue(customerRoot.get("isActive")))
-//                .ifPresent(predicateList::add);
-//        Optional.ofNullable(customerSearch.getIsActive())
-//                .map(isActive -> criteriaBuilder.isFalse(customerRoot.get("isActive")))
-//                .ifPresent(predicateList::add);
 
 
 

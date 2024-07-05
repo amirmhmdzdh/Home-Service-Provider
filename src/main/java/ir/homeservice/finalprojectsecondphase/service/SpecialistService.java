@@ -2,17 +2,13 @@ package ir.homeservice.finalprojectsecondphase.service;
 
 import ir.homeservice.finalprojectsecondphase.dto.request.OfferRequest;
 import ir.homeservice.finalprojectsecondphase.dto.request.SearchForUser;
-import ir.homeservice.finalprojectsecondphase.dto.request.SpecialistRegisterRequest;
 import ir.homeservice.finalprojectsecondphase.dto.response.FilterUserResponse;
 import ir.homeservice.finalprojectsecondphase.exception.*;
-import ir.homeservice.finalprojectsecondphase.mapper.OfferMapper;
-import ir.homeservice.finalprojectsecondphase.mapper.SpecialistMapper;
 import ir.homeservice.finalprojectsecondphase.mapper.SpecialistMappers;
 import ir.homeservice.finalprojectsecondphase.model.offer.Offer;
 import ir.homeservice.finalprojectsecondphase.model.offer.enums.OfferStatus;
 import ir.homeservice.finalprojectsecondphase.model.order.Orders;
 import ir.homeservice.finalprojectsecondphase.model.order.enums.OrderStatus;
-import ir.homeservice.finalprojectsecondphase.model.user.Customer;
 import ir.homeservice.finalprojectsecondphase.model.user.Specialist;
 import ir.homeservice.finalprojectsecondphase.model.user.enums.Role;
 import ir.homeservice.finalprojectsecondphase.model.user.enums.SpecialistStatus;
@@ -46,15 +42,15 @@ public class SpecialistService {
     private final OrderService orderService;
     private final SpecialistRepository specialistRepository;
 
-    public Specialist signUpSpecialist(SpecialistRegisterRequest specialist, String imagePath) {
-        if (specialistRepository.findByEmail(specialist.email()).isPresent())
+    public Specialist signUpSpecialist(Specialist specialist, String imagePath) {
+        if (specialistRepository.findByEmail(specialist.getEmail()).isPresent())
             throw new DuplicateInformationException("this Email already exist!");
         byte[] image = validation.checkImage(imagePath);
         SaveImageToFile.saveImageToFile(image, "D:\\test.jpg");
         Specialist specialist1 = Specialist.builder()
-                .firstName(specialist.firstName()).lastName(specialist.lastName()).email(specialist.email())
+                .firstName(specialist.getFirstName()).lastName(specialist.getLastName()).email(specialist.getEmail())
                 .status(SpecialistStatus.NEW).registrationTime(LocalDateTime.now()).image(image).credit(0L)
-                .password(specialist.password()).role(Role.SPECIALIST).star(0d)
+                .password(specialist.getPassword()).role(Role.SPECIALIST).star(0d)
                 .build();
         return specialistRepository.save(specialist1);
     }
@@ -124,9 +120,6 @@ public class SpecialistService {
                 .map(email -> criteriaBuilder.equal(specialistRoot.get("email"), email))
                 .ifPresent(predicateList::add);
 
-        Optional.ofNullable(search.getIsActive())
-                .map(isActive -> criteriaBuilder.equal(specialistRoot.get("isActive"), isActive))
-                .ifPresent(predicateList::add);
 
         Optional.ofNullable(search.getUserStatus())
                 .map(userStatus -> criteriaBuilder.equal(specialistRoot.get("userStatus"), userStatus))
@@ -153,6 +146,7 @@ public class SpecialistService {
             predicateList.add(criteriaBuilder.between(specialistRoot.get("star"),
                     search.getMinScore(), search.getMaxScore()));
 
+
         if (search.getMinUserCreationAt() == null && search.getMaxUserCreationAt() != null) {
             search.setMinUserCreationAt(LocalDateTime.now().minusYears(1));
         }
@@ -169,17 +163,23 @@ public class SpecialistService {
         resultList.forEach(specialist -> filterUserResponse.add(SpecialistMappers.convertToFilterDTO(specialist)));
         return filterUserResponse;
     }
+    public Double getSpecialistRate(Long specialistId) {
+        Optional<Specialist> specialist = findById(specialistId);
+        if (specialist.isEmpty())
+            throw new NotFoundException("this specialist does not exist!");
+        return specialist.get().getStar();
+    }
 
     public Optional<Specialist> findById(Long id) {
         return specialistRepository.findById(id);
     }
 
-    public Optional<Specialist> findByEmail(String email) {
-        return specialistRepository.findByEmail(email);
-    }
-
     public Specialist save(Specialist specialist) {
         return specialistRepository.save(specialist);
+    }
+
+    public Optional<Specialist> findByEmail(String email) {
+        return specialistRepository.findByEmail(email);
     }
 
 

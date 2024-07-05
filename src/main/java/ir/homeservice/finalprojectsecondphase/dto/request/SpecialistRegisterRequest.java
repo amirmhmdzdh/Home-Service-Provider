@@ -1,6 +1,16 @@
 package ir.homeservice.finalprojectsecondphase.dto.request;
-public record SpecialistRegisterRequest(String firstName,
-                                        String lastName,
-                                        String email,
-                                        String password) {
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Pattern;
+
+public record SpecialistRegisterRequest(
+
+        @Pattern(regexp = "^[a-zA-Z ]{3,}$")
+        String firstName,
+        @Pattern(regexp = "^[a-zA-Z ]{3,}$")
+        String lastName,
+        @Email
+        String email,
+        @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,}$")
+        String password) {
 }

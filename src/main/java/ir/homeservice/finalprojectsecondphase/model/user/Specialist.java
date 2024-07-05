@@ -39,7 +39,6 @@ public class Specialist extends Users {
     @ToString.Exclude
     private List<Offer> offerList;
 
-    private Boolean isActive;
 
     public void addSubServices(SubService subServices) {
         this.subServicesList.add(subServices);
@@ -58,7 +57,6 @@ public class Specialist extends Users {
 
     private void checkRate(double updatedStar) {
         if (updatedStar < 0) {
-            setIsActive(false);
             setStatus(SpecialistStatus.AWAITING);
             setStar(0d);
         } else

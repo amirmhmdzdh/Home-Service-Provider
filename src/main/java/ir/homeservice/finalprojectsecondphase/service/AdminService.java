@@ -121,4 +121,7 @@ public class AdminService {
     public List<MainService> findAllMainService() {
         return mainServiceService.findAllMainService();
     }
+    public List<SubService> findAllSubService() {
+        return subServiceService.findAllSubService();
+    }
 }

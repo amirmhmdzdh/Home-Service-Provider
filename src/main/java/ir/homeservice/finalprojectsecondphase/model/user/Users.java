@@ -3,7 +3,6 @@ package ir.homeservice.finalprojectsecondphase.model.user;
 import ir.homeservice.finalprojectsecondphase.model.baseentity.BaseEntity;
 import ir.homeservice.finalprojectsecondphase.model.user.enums.Role;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Pattern;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 

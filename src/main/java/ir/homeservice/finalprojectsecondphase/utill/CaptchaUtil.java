@@ -20,18 +20,6 @@ public interface CaptchaUtil {
                 .addNoise(new CurvedLineNoiseProducer()).build();
     }
 
-    //    static String encodeBase64(Captcha captcha) {
-//        String image = null;
-//        try {
-//            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-//            ImageIO.write(captcha.getImage(), "png", outputStream);
-//            byte[] arr = Base64.getEncoder().encode(outputStream.toByteArray());
-//            image = new String(arr);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//        return image;
-//    }
     static String encodeBase64(Captcha captcha) {
         String image = null;
         try {

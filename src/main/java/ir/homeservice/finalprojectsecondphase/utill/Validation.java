@@ -2,6 +2,7 @@ package ir.homeservice.finalprojectsecondphase.utill;
 
 
 import ir.homeservice.finalprojectsecondphase.dto.request.OrdersRequest;
+import ir.homeservice.finalprojectsecondphase.dto.request.PaymentRequest;
 import ir.homeservice.finalprojectsecondphase.exception.*;
 import ir.homeservice.finalprojectsecondphase.model.order.Orders;
 import ir.homeservice.finalprojectsecondphase.model.service.SubService;
@@ -70,14 +71,14 @@ public class Validation {
                         .stream()
                         .anyMatch(offer -> offer.getId().equals(offerId)));
         if (!exists) {
-            throw new OfferNotExistException("This offer does not belong to your orders.");
+            throw new NotFoundException("This offer does not belong to your orders.");
         }
         return true;
     }
 
     public boolean checkOwnerOfTheOrder(Long orderId, Customer customer) {
         if (customer.getOrdersList().stream().filter(o -> o.getId().equals(orderId)).findFirst().isEmpty())
-            throw new OrderIsNotExistException("you are not the owner of this order");
+            throw new NotFoundException("you are not the owner of this order");
         return true;
     }
 
@@ -96,6 +97,18 @@ public class Validation {
             throw new TimeException("End time before execution time");
         }
     }
-
+    public boolean checkPaymentRequest(PaymentRequest dto) {
+        if (!dto.getCaptcha().equals(dto.getHidden())) {
+            throw new NotFoundException("wrong captcha");
+        }
+        if (Integer.parseInt(dto.getYear()) < LocalDateTime.now().getYear()) {
+            throw new TimeException("expired card ");
+        }
+        if (Integer.parseInt(dto.getYear()) == LocalDateTime.now().getYear() &&
+                Integer.parseInt(dto.getMonth()) < LocalDateTime.now().getMonth().getValue()) {
+            throw new TimeException("expired card ");
+        }
+        return true;
+    }
 
 }
