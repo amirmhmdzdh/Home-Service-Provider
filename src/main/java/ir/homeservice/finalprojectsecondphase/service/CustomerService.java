@@ -252,6 +252,11 @@ public class CustomerService {
         }
         Offer offer = order.get().getOfferList().stream().
                 filter(o -> o.getOfferStatus().equals(OfferStatus.ACCEPTED)).findFirst().get();
+        Long proposedPrice = offer.getProposedPrice();
+        Specialist specialist = offer.getSpecialist();
+        long managerShare = Math.round(proposedPrice * 0.3);
+        specialist.setCredit(specialist.getCredit() + proposedPrice - managerShare);
+        specialistService.save(specialist);
         return offer.getProposedPrice();
     }
 
