@@ -20,6 +20,7 @@ public class SearchForUser {
     private String firstName;
     private String lastName;
     private String email;
+    private String subServiceName;
 
     private Double star;
     private Double minScore;

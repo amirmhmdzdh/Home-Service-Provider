@@ -17,16 +17,19 @@ import java.util.List;
 @AllArgsConstructor
 @SuperBuilder
 public class Specialist extends Users {
-
     @Lob
     private byte[] image;
 
+
     private Double star;
+
 
     private Long credit;
 
+
     @Enumerated(value = EnumType.STRING)
     private SpecialistStatus status;
+
 
     @ManyToMany(mappedBy = "specialistList", fetch = FetchType.EAGER, cascade = {CascadeType.MERGE, CascadeType.PERSIST}
     )
@@ -38,7 +41,6 @@ public class Specialist extends Users {
             cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
     @ToString.Exclude
     private List<Offer> offerList;
-
 
     public void addSubServices(SubService subServices) {
         this.subServicesList.add(subServices);

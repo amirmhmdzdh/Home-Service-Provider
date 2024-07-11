@@ -52,14 +52,12 @@ public class Validation {
             throw new ImageFormatException("The image is empty!");
         }
 
-        if (!image.matches(".*\\.(jpg|jpeg)$")) {
+        if (!image.matches(".*\\.(jpg|jpeg)$"))
             throw new ImageFormatException("Invalid file format. Only JPG and JPEG formats are supported.");
-        }
         byte[] imageBytes = image.getBytes();
 
-        if (imageBytes.length > 300 * 1024) {
+        if (!(imageBytes.length < 300 * 1024))
             throw new ImageFormatException("The size of the image exceeds the limit!");
-        }
 
         return imageBytes;
     }
@@ -97,6 +95,7 @@ public class Validation {
             throw new TimeException("End time before execution time");
         }
     }
+
     public boolean checkPaymentRequest(PaymentRequest dto) {
         if (!dto.getCaptcha().equals(dto.getHidden())) {
             throw new NotFoundException("wrong captcha");

@@ -8,13 +8,11 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder
-public class UserResponseToLogin{
+public class UserResponseToLogin {
 
     private Long id;
 
     private String email;
-
-    private String password;
 
     private String firstName;
 

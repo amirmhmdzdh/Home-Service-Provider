@@ -17,7 +17,6 @@ import java.util.List;
 @ToString
 public class MainService extends BaseEntity<Long> {
 
-   // @Pattern(regexp = "^[a-zA-Z ]{3,}$", message = "Invalid name!")
     @Column(unique = true)
     private String name;
 

@@ -15,4 +15,9 @@ public interface OfferRepository extends JpaRepository<Offer, Long> {
 
     @Query(" from Offer o where o.orders.id = :orderId and o.offerStatus= :offerStatus order by o.specialist.star desc")
     List<Offer> findOfferListBySpecialistScore(Long orderId, OfferStatus offerStatus);
+
+    @Query("select o from Offer o where o.specialist.id = :specialistId and o.offerStatus = :offerStatus")
+    List<Offer> findOffersBySpecialistIdAndOfferStatus(Long specialistId, OfferStatus offerStatus);
+
+
 }

@@ -40,5 +40,12 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(exceptionDto, HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(ImageFormatException.class)
+    public ResponseEntity<ExceptionDto> ImageFormatExceptionHandler(ImageFormatException e) {
+        log.warn(e.getMessage());
+        ExceptionDto exceptionDto = new ExceptionDto(e.getMessage(), LocalDateTime.now());
+        return new ResponseEntity<>(exceptionDto, HttpStatus.CONFLICT);
+    }
+
 
 }

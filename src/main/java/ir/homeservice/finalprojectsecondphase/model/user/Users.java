@@ -5,37 +5,71 @@ import ir.homeservice.finalprojectsecondphase.model.user.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
-import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-@MappedSuperclass
+@Inheritance(strategy = InheritanceType.JOINED)
+//@MappedSuperclass
 @SuperBuilder
-public class Users extends BaseEntity<Long> {
+@Entity
+public class Users extends BaseEntity<Long> implements UserDetails {
 
-   // @Pattern(regexp = "^[a-zA-Z ]{3,}$", message = "Invalid name format!")
     private String firstName;
 
-   // @Pattern(regexp = "^[a-zA-Z ]{3,}$", message = "Invalid last name format!")
     private String lastName;
 
-   // @Pattern(regexp = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$", message = "Invalid email!")
     @Column(unique = true)
     private String email;
 
-   // @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,}$",
-          //  message = "Password is not strong!")
     private String password;
 
 
     @Enumerated(value = EnumType.STRING)
     private Role role;
 
-    private LocalDateTime registrationTime;
 
+    private Boolean isActive;
 
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority(this.role.name()));
+    }
+
+    @Override
+    public String getUsername() {
+        return email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return isActive;
+    }
 }

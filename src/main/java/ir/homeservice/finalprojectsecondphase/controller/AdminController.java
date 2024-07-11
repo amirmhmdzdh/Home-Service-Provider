@@ -2,9 +2,9 @@ package ir.homeservice.finalprojectsecondphase.controller;
 
 import ir.homeservice.finalprojectsecondphase.dto.request.*;
 import ir.homeservice.finalprojectsecondphase.dto.response.*;
-import ir.homeservice.finalprojectsecondphase.mapper.AdminLoginMapper;
 import ir.homeservice.finalprojectsecondphase.mapper.MainServiceMapper;
 import ir.homeservice.finalprojectsecondphase.mapper.SubServiceMapper;
+import ir.homeservice.finalprojectsecondphase.model.order.Orders;
 import ir.homeservice.finalprojectsecondphase.model.service.MainService;
 import ir.homeservice.finalprojectsecondphase.model.service.SubService;
 import ir.homeservice.finalprojectsecondphase.model.user.Admin;
@@ -18,25 +18,20 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
+@RequestMapping("/admin")
 @RequiredArgsConstructor
 public class AdminController {
     private final ModelMapper modelMapper;
     private final AdminService adminService;
 
-
-    @GetMapping("/login-admin")
-    public ResponseEntity<UserResponseToLogin> signInAdmin(@RequestBody UserRequestToLogin request) {
-
-        Admin admin = AdminLoginMapper.INSTANCE.signInAdminRequestToModel(request);
-
-        Admin signInAdmin = adminService.signInAdmin(admin.getEmail(), admin.getPassword());
-
-        UserResponseToLogin userResponseToLogin = modelMapper.map(signInAdmin, UserResponseToLogin.class);
-
-        return new ResponseEntity<>(userResponseToLogin, HttpStatus.FOUND);
+    @PostMapping("/signUp-admin")
+    public Admin adminSignUp(
+            @RequestBody AdminRegisterRequest adminRegisterRequest) {
+        return adminService.saveAdmin(adminRegisterRequest);
     }
 
     @PostMapping("/create-main-service")
@@ -50,6 +45,18 @@ public class AdminController {
                 HttpStatus.CREATED);
     }
 
+    @GetMapping("/show-all-MainService")
+    public List<MainServiceResponse> findAllMainServices() {
+        List<MainService> mainServices = adminService.findAllMainService();
+        List<MainServiceResponse> mainServiceResponses = new ArrayList<>();
+        for (MainService mainService : mainServices) {
+            MainServiceResponse mainServiceResponse = modelMapper.map(mainService, MainServiceResponse.class);
+            mainServiceResponses.add(mainServiceResponse);
+        }
+        return mainServiceResponses;
+    }
+
+
     @PostMapping("/add-subServices")
     public ResponseEntity<SubServiceResponse> addSubServices(@Valid @RequestBody SubServiceRequest request) {
 
@@ -60,6 +67,18 @@ public class AdminController {
         SubServiceResponse subServiceResponse = modelMapper.map(subService, SubServiceResponse.class);
 
         return new ResponseEntity<>(subServiceResponse, HttpStatus.CREATED);
+    }
+
+    @GetMapping("/show-all-SubService")
+    public List<SubServiceResponse> findAllSubServices() {
+        List<SubService> subServices = adminService.findAllSubService();
+        List<SubServiceResponse> subServiceResponses = new ArrayList<>();
+
+        for (SubService subService : subServices) {
+            SubServiceResponse subServiceResponse = modelMapper.map(subService, SubServiceResponse.class);
+            subServiceResponses.add(subServiceResponse);
+        }
+        return subServiceResponses;
     }
 
     @PutMapping("/update-SubService")
@@ -100,7 +119,7 @@ public class AdminController {
     public ResponseEntity<String> deleteSubServicesFromSpecialist(
             @PathVariable Long subServiceId, @PathVariable Long specialistId) {
         adminService.deleteSubServicesFromSpecialist(subServiceId, specialistId);
-        return new ResponseEntity<>(HttpStatus.ACCEPTED);
+        return new ResponseEntity<>("SPECIALIST SUCCESSFULLY DELETED ", HttpStatus.ACCEPTED);
     }
 
     @PostMapping("/search")
@@ -108,14 +127,19 @@ public class AdminController {
         return adminService.searchUser(search);
     }
 
-    @GetMapping("/show-all-MainService")
-    public List<MainService> findAllMainServices() {
-        return adminService.findAllMainService();
+    @GetMapping("/get-history-of-sub-services-for-user")
+    public List<SubService> getHistoryOfSubServicesForUser(@RequestParam String email) {
+        return adminService.getHistoryOfSubServicesForUser(email);
     }
 
-    @GetMapping("/show-all-SubService")
-    public List<SubService> findAllSubServices() {
-        return adminService.findAllSubService();
+    @GetMapping("/get-history-of-orders-for-user")
+    public List<Orders> getHistoryOfOrdersForUser(@RequestBody OrderHistoryDto dto) {
+        return adminService.getHistoryOfOrdersForUser(dto);
+    }
+
+    @GetMapping("/reporting-from-users")
+    public ReportDto reportingFromUsers(@RequestParam String email) {
+        return adminService.reportingFromUsers(email);
     }
 
 }

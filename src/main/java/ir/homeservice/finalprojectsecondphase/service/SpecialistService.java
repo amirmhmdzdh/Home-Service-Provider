@@ -2,6 +2,8 @@ package ir.homeservice.finalprojectsecondphase.service;
 
 import ir.homeservice.finalprojectsecondphase.dto.request.OfferRequest;
 import ir.homeservice.finalprojectsecondphase.dto.request.SearchForUser;
+import ir.homeservice.finalprojectsecondphase.dto.request.UserChangePasswordRequest;
+import ir.homeservice.finalprojectsecondphase.dto.response.FilterOrderResponseDTO;
 import ir.homeservice.finalprojectsecondphase.dto.response.FilterUserResponse;
 import ir.homeservice.finalprojectsecondphase.exception.*;
 import ir.homeservice.finalprojectsecondphase.mapper.SpecialistMappers;
@@ -9,6 +11,7 @@ import ir.homeservice.finalprojectsecondphase.model.offer.Offer;
 import ir.homeservice.finalprojectsecondphase.model.offer.enums.OfferStatus;
 import ir.homeservice.finalprojectsecondphase.model.order.Orders;
 import ir.homeservice.finalprojectsecondphase.model.order.enums.OrderStatus;
+import ir.homeservice.finalprojectsecondphase.model.service.SubService;
 import ir.homeservice.finalprojectsecondphase.model.user.Specialist;
 import ir.homeservice.finalprojectsecondphase.model.user.enums.Role;
 import ir.homeservice.finalprojectsecondphase.model.user.enums.SpecialistStatus;
@@ -17,11 +20,9 @@ import ir.homeservice.finalprojectsecondphase.utill.SaveImageToFile;
 import ir.homeservice.finalprojectsecondphase.utill.Validation;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,20 +39,25 @@ public class SpecialistService {
     @PersistenceContext
     private EntityManager entityManager;
     private final Validation validation;
+    private final EmailService emailService;
     private final OfferService offerService;
     private final OrderService orderService;
+    private final PasswordEncoder passwordEncoder;
     private final SpecialistRepository specialistRepository;
 
     public Specialist signUpSpecialist(Specialist specialist, String imagePath) {
         if (specialistRepository.findByEmail(specialist.getEmail()).isPresent())
             throw new DuplicateInformationException("this Email already exist!");
         byte[] image = validation.checkImage(imagePath);
-        SaveImageToFile.saveImageToFile(image, "D:\\test.jpg");
+        SaveImageToFile.saveImageToFile(image, "D:/test.jpg");
         Specialist specialist1 = Specialist.builder()
                 .firstName(specialist.getFirstName()).lastName(specialist.getLastName()).email(specialist.getEmail())
                 .status(SpecialistStatus.NEW).registrationTime(LocalDateTime.now()).image(image).credit(0L)
-                .password(specialist.getPassword()).role(Role.SPECIALIST).star(0d)
+                .password(passwordEncoder.encode(specialist.getPassword())).role(Role.SPECIALIST).star(0d)
                 .build();
+        specialistRepository.save(specialist1);
+        emailService.createEmail(specialist.getEmail());
+        specialist1.setStatus(SpecialistStatus.AWAITING);
         return specialistRepository.save(specialist1);
     }
 
@@ -60,21 +66,17 @@ public class SpecialistService {
                 .orElseThrow(() -> new NotFoundException("Specialist not found. "));
     }
 
-    public Specialist changePasswordSpecialist(String email, String oldPassword, String newPassword) {
-        Optional<Specialist> specialist = specialistRepository.findAll().stream()
-                .filter(s -> email.equals(s.getEmail()) && oldPassword.equals(s.getPassword()))
-                .findFirst();
-        if (specialist.isEmpty()) {
-            throw new NotFoundException("Invalid email or old password.");
-        }
-        Specialist specialist1 = specialist.get();
-        specialist1.setPassword(newPassword);
-        return save(specialist1);
+    public Specialist changePasswordSpecialist(UserChangePasswordRequest request, Long specialistId) {
+        if (!request.newPassword().equals(request.confirmNewPassword()))
+            throw new NotFoundException("this confirmNewPassword not match with newPassword!");
+        Specialist specialist = specialistRepository.getReferenceById(specialistId);
+        specialist.setPassword(passwordEncoder.encode(request.confirmNewPassword()));
+        return save(specialist);
     }
 
     public Offer newOffers(OfferRequest offerRequest, Long specialistId) {
         Optional<Specialist> specialistOptional = specialistRepository.findById(specialistId);
-        Specialist specialist = specialistOptional.get();
+         Specialist specialist = specialistOptional.get();
         if (!specialist.getStatus().equals(SpecialistStatus.CONFIRMED))
             throw new NotFoundException("the status of specialist is not CONFIRMED");
         Optional<Orders> ordersOptional = orderService.findById(offerRequest.orderId());
@@ -108,6 +110,12 @@ public class SpecialistService {
         CriteriaQuery<Specialist> specialistCriteriaQuery = criteriaBuilder.createQuery(Specialist.class);
         Root<Specialist> specialistRoot = specialistCriteriaQuery.from(Specialist.class);
 
+        Join<Specialist, SubService> subServiceJoin = specialistRoot.join("subServicesList");
+
+        specialistCriteriaQuery.select(specialistRoot)
+                .where(criteriaBuilder.like(subServiceJoin.get("name"), "%" + search.getSubServiceName() + "%"));
+
+
         Optional.ofNullable(search.getFirstName())
                 .map(firstName -> criteriaBuilder.equal(specialistRoot.get("firstName"), firstName))
                 .ifPresent(predicateList::add);
@@ -125,7 +133,34 @@ public class SpecialistService {
                 .map(userStatus -> criteriaBuilder.equal(specialistRoot.get("userStatus"), userStatus))
                 .ifPresent(predicateList::add);
 
-//        if (search.getMinCredit() == 0 && search.getMaxCredit() != 0) {
+        if (search.getMinUserCreationAt() == null && search.getMaxUserCreationAt() != null) {
+            search.setMinUserCreationAt(LocalDateTime.now().minusYears(1));
+        }
+        if (search.getMinUserCreationAt() != null && search.getMaxUserCreationAt() == null) {
+            search.setMaxUserCreationAt(LocalDateTime.now());
+        }
+        if (search.getMinUserCreationAt() != null && search.getMaxUserCreationAt() != null) {
+            predicateList.add(criteriaBuilder.between(specialistRoot.get("registrationTime"),
+                    search.getMinUserCreationAt(), search.getMaxUserCreationAt()));
+        }
+
+
+        if (search.getMinScore() == null && search.getMaxScore() != null)
+            search.setMinScore(0.0);
+        if (search.getMinScore() != null && search.getMaxScore() == null)
+            search.setMaxScore(5.0);
+        if (search.getMinScore() != null && search.getMaxScore() != null)
+            predicateList.add(criteriaBuilder.between(specialistRoot.get("star"),
+                    search.getMinScore(), search.getMaxScore()));
+
+        specialistCriteriaQuery.select(specialistRoot).where(criteriaBuilder.and(predicateList.toArray(new Predicate[0])));
+        List<Specialist> resultList = entityManager.createQuery(specialistCriteriaQuery).getResultList();
+        resultList.forEach(specialist -> filterUserResponse.add(SpecialistMappers.convertToFilterDTO(specialist)));
+        return filterUserResponse;
+    }
+
+
+//            if (search.getMinCredit() == 0 && search.getMaxCredit() != 0) {
 //            search.setMinCredit(0L);
 //        }
 //        if (search.getMinCredit() != 0 && search.getMaxCredit() == 0) {
@@ -138,37 +173,30 @@ public class SpecialistService {
 //        }
 
 
-        if (search.getMinScore() == null && search.getMaxScore() != null)
-            search.setMinScore(0.0);
-        if (search.getMinScore() != null && search.getMaxScore() == null)
-            search.setMaxScore(5.0);
-        if (search.getMinScore() != null && search.getMaxScore() != null)
-            predicateList.add(criteriaBuilder.between(specialistRoot.get("star"),
-                    search.getMinScore(), search.getMaxScore()));
-
-
-        if (search.getMinUserCreationAt() == null && search.getMaxUserCreationAt() != null) {
-            search.setMinUserCreationAt(LocalDateTime.now().minusYears(1));
-        }
-        if (search.getMinUserCreationAt() != null && search.getMaxUserCreationAt() == null) {
-            search.setMaxUserCreationAt(LocalDateTime.now());
-        }
-        if (search.getMinUserCreationAt() != null && search.getMaxUserCreationAt() != null) {
-            predicateList.add(criteriaBuilder.between(specialistRoot.get("registrationTime"),
-                    search.getMinUserCreationAt(), search.getMaxUserCreationAt()));
-        }
-
-        specialistCriteriaQuery.select(specialistRoot).where(criteriaBuilder.and(predicateList.toArray(new Predicate[0])));
-        List<Specialist> resultList = entityManager.createQuery(specialistCriteriaQuery).getResultList();
-        resultList.forEach(specialist -> filterUserResponse.add(SpecialistMappers.convertToFilterDTO(specialist)));
-        return filterUserResponse;
-    }
     public Double getSpecialistRate(Long specialistId) {
         Optional<Specialist> specialist = findById(specialistId);
         if (specialist.isEmpty())
             throw new NotFoundException("this specialist does not exist!");
         return specialist.get().getStar();
     }
+
+    public Long getSpecialistCredit(Long specialistId) {
+        Optional<Specialist> specialist = findById(specialistId);
+        if (specialist.isEmpty())
+            throw new NotFoundException("this specialist does not exist!");
+        return specialist.get().getCredit();
+    }
+
+    public List<Orders> findAllOrdersBySpecialist(OrderStatus status, Specialist specialist) {
+        if (status == null) throw new NotFoundException("STATUS IS REQUIRED");
+        return orderService.findAllBySpecialist(specialist, status);
+    }
+
+    public List<Offer> showAllOffersAccepted(OfferStatus status, Specialist specialist) {
+        List<Offer> offers = offerService.findOffersBySpecialistIdAndOfferStatus(specialist.getId(), status);
+        return offers;
+    }
+
 
     public Optional<Specialist> findById(Long id) {
         return specialistRepository.findById(id);
@@ -179,7 +207,11 @@ public class SpecialistService {
     }
 
     public Optional<Specialist> findByEmail(String email) {
-        return specialistRepository.findByEmail(email);
+        return Optional.ofNullable(specialistRepository.findByEmail(email).orElseThrow(
+                () -> new NotFoundException(
+                        String.format("USER %s NOT FOUND", email)
+                )
+        ));
     }
 
 

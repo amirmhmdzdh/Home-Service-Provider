@@ -16,6 +16,7 @@ import ir.homeservice.finalprojectsecondphase.model.order.enums.OrderStatus;
 import ir.homeservice.finalprojectsecondphase.model.service.SubService;
 import ir.homeservice.finalprojectsecondphase.model.user.Customer;
 import ir.homeservice.finalprojectsecondphase.model.user.Specialist;
+import ir.homeservice.finalprojectsecondphase.model.user.Users;
 import ir.homeservice.finalprojectsecondphase.model.user.enums.Role;
 import ir.homeservice.finalprojectsecondphase.repository.CustomerRepository;
 import ir.homeservice.finalprojectsecondphase.utill.CaptchaUtil;
@@ -28,6 +29,7 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
 import org.springframework.web.servlet.ModelAndView;
@@ -37,6 +39,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -45,13 +48,16 @@ public class CustomerService {
     private final Validation validation;
     private final OrderService orderService;
     private final OfferService offerService;
+    protected final EmailService emailService;
     @PersistenceContext
     private final EntityManager entityManager;
     private final AddressService addressService;
     private final CommentService commentService;
+    private final PasswordEncoder passwordEncoder;
     private final SubServiceService subServiceService;
     private final SpecialistService specialistService;
     private final CustomerRepository customerRepository;
+
 
     public Customer signUpCustomer(CustomerRequest customer) {
         Address address = Address.builder().province(customer.request().province()).city(customer.request().city())
@@ -60,7 +66,7 @@ public class CustomerService {
                 .firstName(customer.firstName())
                 .lastName(customer.lastName())
                 .email(customer.email())
-                .password(customer.password())
+                .password(passwordEncoder.encode(customer.password()))
                 .registrationTime(LocalDateTime.now())
                 .credit(0L)
                 .role(Role.CUSTOMER)
@@ -69,6 +75,7 @@ public class CustomerService {
         if (customerRepository.findByEmail(customer.email()).isPresent())
             throw new DuplicateInformationException(customer.email() + " is duplicate");
         customerRepository.save(insertCustomer);
+        emailService.createEmail(customer.email());
         addAddress(address, insertCustomer);
         return insertCustomer;
     }
@@ -78,17 +85,12 @@ public class CustomerService {
                 .orElseThrow(() -> new NotFoundException("This customer does not exist!"));
     }
 
-    public Customer changePassword(String email, String oldPassword, String newPassword) {
-        Optional<Customer> customer = customerRepository.findAll().stream()
-                .filter(c -> email.equals(c.getEmail()) && oldPassword.equals(c.getPassword()))
-                .findFirst();
-        if (customer.isEmpty()) {
-            throw new NotFoundException("Invalid email or old password.");
-        }
-        Customer customer1 = customer.get();
-        customer1.setPassword(newPassword);
-        customerRepository.save(customer1);
-        return customer1;
+    public Customer changePassword(UserChangePasswordRequest password, Long customerId) {
+        if (!password.newPassword().equals(password.confirmNewPassword()))
+            throw new NotFoundException("this confirmNewPassword not match with newPassword!");
+        Customer customer = customerRepository.getReferenceById(customerId);
+        customer.setPassword(passwordEncoder.encode(password.confirmNewPassword()));
+        return customerRepository.save(customer);
     }
 
     public Orders watchAndOrder(Long customerId, OrdersRequest request) {
@@ -101,7 +103,8 @@ public class CustomerService {
         Orders orders = Orders.builder()
                 .description(request.description()).subServices(subService).orderStatus(OrderStatus.WAITING_FOR_SPECIALIST_SUGGESTION)
                 .executionTime(request.workStartDate()).endTime(request.workEndDate())
-                .customer(customer).address(customer.getAddress()).proposedPrice(request.proposedPrice()).build();
+                .customer(customer).address(customer.getAddress()).proposedPrice(request.proposedPrice())
+                .registrationTime(LocalDateTime.now()).build();
         validation.validateTime(orders);
         return orderService.save(orders);
     }
@@ -113,9 +116,8 @@ public class CustomerService {
         addressService.createAddress(address);
     }
 
-    public Orders trackOrders(Long offerId, Long customerId) {
-        Optional<Customer> customerOptional = customerRepository.findById(customerId);
-        validation.checkOfferBelongToTheOrder(offerId, customerOptional.get());
+    public Orders trackOrders(Long offerId, Customer customer) {
+        validation.checkOfferBelongToTheOrder(offerId, customer);
         Optional<Offer> offer = offerService.findById(offerId);
         Offer foundOffer = offer.get();
         if (foundOffer.getOfferStatus().equals(OfferStatus.ACCEPTED))
@@ -123,25 +125,18 @@ public class CustomerService {
         return orderService.chooseOffer(foundOffer.getOrders(), offerId);
     }
 
-    public List<Offer> findOfferListByProposedPrice(Long orderId, Long customerId) {
-        Optional<Customer> customerOptional = customerRepository.findById(customerId);
-        if (customerOptional.isEmpty())
-            throw new NotFoundException("Customer Not Found!");
-        validation.checkOwnerOfTheOrder(orderId, customerOptional.get());
+    public List<Offer> findOfferListByProposedPrice(Long orderId, Customer customer) {
+        validation.checkOwnerOfTheOrder(orderId, customer);
         return offerService.findOfferListByProposedPrice(orderId);
     }
 
-    public List<Offer> findOfferListBySpecialistScore(Long orderId, Long customerId) {
-        Optional<Customer> customerOptional = customerRepository.findById(customerId);
-        if (customerOptional.isEmpty())
-            throw new NotFoundException("Customer Not Found!");
-        validation.checkOwnerOfTheOrder(orderId, customerOptional.get());
+    public List<Offer> findOfferListBySpecialistScore(Long orderId, Customer customer) {
+        validation.checkOwnerOfTheOrder(orderId, customer);
         return offerService.findOfferListBySpecialistScore(orderId);
     }
 
-    public Orders changeOrderStatusToStarted(Long orderId, Long customerId) {
-        Optional<Customer> customer = customerRepository.findById(customerId);
-        validation.checkOwnerOfTheOrder(orderId, customer.get());
+    public Orders changeOrderStatusToStarted(Long orderId, Users customer) {
+        validation.checkOwnerOfTheOrder(orderId, (Customer) customer);
         Optional<Orders> optionalOrders = orderService.findById(orderId);
         if (!optionalOrders.get().getOrderStatus().equals(OrderStatus.WAITING_FOR_SPECIALIST_TO_COME))
             throw new NotFoundException
@@ -154,8 +149,9 @@ public class CustomerService {
         optionalOrders.get().setOrderStatus(OrderStatus.STARTED);
         return orderService.save(optionalOrders.get());
     }
-    public Orders changeOrderStatusToDone(Long orderId, Long customerId) {
-        Customer customer = customerRepository.getReferenceById(customerId);
+
+    public Orders changeOrderStatusToDone(Long orderId, Customer customer) {
+        // Customer customer = customerRepository.getReferenceById(customerId);
         validation.checkOwnerOfTheOrder(orderId, customer);
         Orders order = orderService.findById(orderId)
                 .orElseThrow(() -> new NotFoundException("Order not found"));
@@ -188,14 +184,12 @@ public class CustomerService {
         return order;
     }
 
-    public Customer increaseCustomerCredit(Long customerId, Long credit) {
-        Customer customer = customerRepository.getReferenceById(customerId);
+    public Customer increaseCustomerCredit(Customer customer, Long credit) {
         customer.setCredit(credit + customer.getCredit());
         return customerRepository.save(customer);
     }
 
-    public Customer paidByInAppCredit(Long orderId, Long customerId) {
-        Customer customer = customerRepository.getReferenceById(customerId);
+    public Customer paidByInAppCredit(Long orderId, Customer customer) {
         validation.checkOwnerOfTheOrder(orderId, customer);
         Orders orders = orderService.findById(orderId)
                 .orElseThrow(() -> new NotFoundException("order not Exist!"));
@@ -205,8 +199,10 @@ public class CustomerService {
         Long offerProposedPrice = offer.getProposedPrice();
 
         if (customerCredit < offerProposedPrice) {
-            throw new AmountLessException("not enough credit to pay in app");
+            throw new PriceException("not enough credit to pay in app");
         }
+        orders.setOrderStatus(OrderStatus.PAID);
+        orderService.save(orders);
         accounting(orders);
         customer.setCredit(customerCredit - offerProposedPrice);
         return customerRepository.save(customer);
@@ -219,13 +215,12 @@ public class CustomerService {
         orderService.save(orders);
         Long proposedPrice = offer.getProposedPrice();
         Specialist specialist = offer.getSpecialist();
-        long managerShare = Math.round(proposedPrice * 0.3);
-        specialist.setCredit(specialist.getCredit() + proposedPrice - managerShare);
+        long specialistShare = Math.round(proposedPrice * 0.7);
+        specialist.setCredit(specialist.getCredit() + specialistShare);
         specialistService.save(specialist);
     }
 
-    public ModelAndView payByOnlinePayment(Long orderId, Long customerId, Model model) {
-        Customer customer = customerRepository.getReferenceById(customerId);
+    public ModelAndView payByOnlinePayment(Long orderId, Customer customer, Model model) {
         Orders orders = orderService.findById(orderId)
                 .orElseThrow(() -> new NotFoundException("order not Exist!"));
         validation.checkOwnerOfTheOrder(orders.getId(), customer);
@@ -252,11 +247,7 @@ public class CustomerService {
         }
         Offer offer = order.get().getOfferList().stream().
                 filter(o -> o.getOfferStatus().equals(OfferStatus.ACCEPTED)).findFirst().get();
-        Long proposedPrice = offer.getProposedPrice();
-        Specialist specialist = offer.getSpecialist();
-        long managerShare = Math.round(proposedPrice * 0.3);
-        specialist.setCredit(specialist.getCredit() + proposedPrice - managerShare);
-        specialistService.save(specialist);
+
         return offer.getProposedPrice();
     }
 
@@ -276,36 +267,44 @@ public class CustomerService {
         if (order.isEmpty())
             throw new NotFoundException("not found order");
 
-        return paidByInAppCredit(order.get().getId(), customer.get().getId());
+        return paidByInAppCredit(order.get().getId(), customer.get());
     }
 
-    public Comment registerComment(CommentRequest request, Long orderId, Long customerId) {
-        Customer customer = customerRepository.getReferenceById(customerId);
+    public Comment registerComment(CommentRequest request, Long orderId, Customer customer) {
         validation.checkOwnerOfTheOrder(orderId, customer);
         Comment comment;
         Optional<Orders> orders = orderService.findById(orderId);
         if (!orders.get().getOrderStatus().equals(OrderStatus.PAID)) {
             throw new NotFoundException("The status of this order is not yet PAID!");
         }
-        Specialist specialist = orders.get().getOfferList().stream()
+        Optional<Offer> acceptedOffer = orders.get().getOfferList().stream()
                 .filter(o -> o.getOfferStatus().equals(OfferStatus.ACCEPTED))
-                .findFirst().get().getSpecialist();
-        specialist.setStar(request.star());
-        specialistService.save(specialist);
+                .findFirst();
+
+        if (acceptedOffer.isPresent()) {
+            Offer offer = acceptedOffer.get();
+            Specialist specialist = offer.getSpecialist();
+
+            double existingStars = specialist.getStar();
+            double newStars = request.star();
+            double totalStars = existingStars + newStars;
+
+            specialist.setStar(totalStars);
+            specialistService.save(specialist);
+        }
         comment = Comment.builder()
                 .orders(orders.get())
                 .textComment(request.textComment())
                 .star(request.star())
+                .registrationTime(LocalDateTime.now())
                 .build();
         commentService.save(comment);
         orders.get().setComment(comment);
         orderService.save(orders.get());
-
         return comment;
     }
 
     public List<FilterUserResponse> customerFilter(SearchForUser customerSearch) {
-
         List<FilterUserResponse> filterUserResponse = new ArrayList<>();
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
         CriteriaQuery<Customer> customerCriteriaQuery = criteriaBuilder.createQuery(Customer.class);
@@ -324,6 +323,9 @@ public class CustomerService {
                 .map(email -> criteriaBuilder.equal(customerRoot.get("email"), email))
                 .ifPresent(predicateList::add);
 
+        Optional.ofNullable(customerSearch.getUserType())
+                .map(user -> criteriaBuilder.equal(customerRoot.get("role"), user))
+                .ifPresent(predicateList::add);
 
         if (customerSearch.getMinUserCreationAt() == null && customerSearch.getMaxUserCreationAt() != null) {
             customerSearch.setMinUserCreationAt(LocalDateTime.now().minusYears(1));
@@ -336,27 +338,38 @@ public class CustomerService {
                     customerSearch.getMinUserCreationAt(), customerSearch.getMaxUserCreationAt()));
         }
 
-
-//        if (customerSearch.getMinCredit() == 0 && customerSearch.getMaxCredit() != 0) {
-//            customerSearch.setMinCredit(0L);
-//        }
-//        if (customerSearch.getMinCredit() != 0 && customerSearch.getMaxCredit() == 0) {
-//            customerSearch.setMaxCredit(Long.MAX_VALUE);
-//        }
-//        if (customerSearch.getMinCredit() != 0 || customerSearch.getMaxCredit() != 0) {
-//            Predicate creditPredicate = criteriaBuilder.between(customerRoot.get("credit"),
-//                    customerSearch.getMinCredit(), customerSearch.getMaxCredit());
-//            predicateList.add(creditPredicate);
-//        }
-
-
         customerCriteriaQuery.select(customerRoot).where(criteriaBuilder.or(predicateList.toArray(new Predicate[0])));
         List<Customer> resultList = entityManager.createQuery(customerCriteriaQuery).getResultList();
         resultList.forEach(customer -> filterUserResponse.add(CustomerMappers.convertToFilterDTO(customer)));
         return filterUserResponse;
     }
+
+    public List<Orders> filterOrder(String orderStatus, Long clientId) {
+        Optional<Customer> client = customerRepository.findById(clientId);
+        List<Orders> dbOrderList = client.get().getOrdersList();
+        if (dbOrderList.isEmpty()) {
+            throw new NotFoundException("No orders found for the client");
+        }
+        List<Orders> orderList = dbOrderList.stream()
+                .filter(o -> o.getOrderStatus().name().equals(orderStatus))
+                .collect(Collectors.toList());
+        if (orderList.isEmpty()) {
+            throw new NotFoundException("No orders found with the given order status");
+        }
+        return orderList;
+    }
+
+    public Long getCustomerCredit(Long clientId) {
+        Optional<Customer> client = customerRepository.findById(clientId);
+        return client.get().getCredit();
+    }
+
     public Optional<Customer> findByEmail(String email) {
-        return customerRepository.findByEmail(email);
+        return Optional.ofNullable(customerRepository.findByEmail(email).orElseThrow(
+                () -> new NotFoundException(
+                        String.format("USER %s NOT FOUND", email)
+                )
+        ));
     }
 }
 

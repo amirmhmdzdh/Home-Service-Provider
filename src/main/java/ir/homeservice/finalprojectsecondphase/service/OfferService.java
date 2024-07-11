@@ -37,5 +37,8 @@ public class OfferService {
         return offerRepository.findOfferListBySpecialistScore(orderId, OfferStatus.WAITING);
     }
 
+    public List<Offer> findOffersBySpecialistIdAndOfferStatus(Long workerId, OfferStatus offerStatus) {
+        return offerRepository.findOffersBySpecialistIdAndOfferStatus(workerId, offerStatus);
+    }
 
 }

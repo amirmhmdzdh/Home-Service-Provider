@@ -1,45 +1,83 @@
 package ir.homeservice.finalprojectsecondphase.service;
 
+import ir.homeservice.finalprojectsecondphase.dto.request.AdminRegisterRequest;
+import ir.homeservice.finalprojectsecondphase.dto.request.OrderHistoryDto;
 import ir.homeservice.finalprojectsecondphase.dto.request.SearchForUser;
 import ir.homeservice.finalprojectsecondphase.dto.response.FilterUserResponse;
+import ir.homeservice.finalprojectsecondphase.dto.response.ReportDto;
 import ir.homeservice.finalprojectsecondphase.exception.*;
+import ir.homeservice.finalprojectsecondphase.model.order.Orders;
 import ir.homeservice.finalprojectsecondphase.model.service.MainService;
 import ir.homeservice.finalprojectsecondphase.model.service.SubService;
 import ir.homeservice.finalprojectsecondphase.model.user.Admin;
 import ir.homeservice.finalprojectsecondphase.model.user.Specialist;
+import ir.homeservice.finalprojectsecondphase.model.user.enums.Role;
 import ir.homeservice.finalprojectsecondphase.model.user.enums.SpecialistStatus;
 import ir.homeservice.finalprojectsecondphase.repository.AdminRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 @Transactional
+@RequiredArgsConstructor
+
 public class AdminService {
+    private final OrderService orderService;
+    private final UsersService usersService;
     private final CustomerService customerService;
     private final AdminRepository adminRepository;
     private final SpecialistService specialistService;
     private final SubServiceService subServiceService;
     private final MainServiceService mainServiceService;
+    private final BCryptPasswordEncoder passwordEncoder;
 
-    public Admin signInAdmin(String email, String password) {
-        return adminRepository.findByEmailAndPassword(email, password)
-                .orElseThrow(() -> new NotFoundException("This admin does not exist!"));
+
+    public Admin findByEmail(String email) {
+        return adminRepository.findByEmail(email).orElseThrow(
+                () -> new NotFoundException(String.format(
+                        "USER %s NOT FOUND", email
+                ))
+        );
     }
+
+    public Admin saveAdmin(AdminRegisterRequest request) {
+        if (!adminRepository.existsByEmail(request.email())) {
+            Admin admin = Admin.builder()
+                    .firstName(request.firstName())
+                    .lastName(request.lastName())
+                    .email(request.email())
+                    .role(Role.ADMIN)
+                    .isActive(true)
+                    .password(passwordEncoder.encode(request.password()))
+                    .registrationTime(LocalDateTime.now())
+                    .build();
+            return adminRepository.save(admin);
+        }
+
+        return null;
+    }
+
+//    public Admin signInAdmin(String email,String password) {
+////       Admin admin1 = findByEmail(
+////                SecurityContextHolder.getContext().getAuthentication().getName()
+////        );
+//
+//        return adminRepository.findByEmailAndPassword(email, password)
+//                .orElseThrow(() -> new NotFoundException("This admin does not exist!"));
+//    }
 
 
     public MainService createMainService(MainService mainService) {
         if (mainServiceService.findByName(mainService.getName()).isPresent())
-            throw new DuplicateInformationException("this " + mainService.getName() + " main service already exist!");
-        MainService mainService1 = MainService.builder()
-                .name(mainService.getName())
-                .build();
-        return mainServiceService.save(mainService1);
+            throw new DuplicateInformationException("THIS " + mainService.getName() + " SERVICE ALREADY EXISTS! ");
+        return mainServiceService.save(mainService);
     }
 
     public SubService createSubService(SubService subService) {
@@ -118,9 +156,35 @@ public class AdminService {
         return filterUserResponseList;
     }
 
+    public List<SubService> getHistoryOfSubServicesForUser(String email) {
+        return subServiceService.historyOfSubServicesForCurrentUser(email);
+    }
+
+    public List<Orders> getHistoryOfOrdersForUser(OrderHistoryDto dto) {
+        return orderService.historyOfOrdersForUser(dto);
+    }
+
+    public ReportDto reportingFromUsers(String email) {
+        ReportDto report = new ReportDto();
+        if (usersService.findByEmail(email).get().getRole().equals(Role.SPECIALIST)) {
+            LocalDateTime creationDate = specialistService.findByEmail(email).get().getRegistrationTime();
+            report.setCreationDate(creationDate);
+            Long countedOfOrders = orderService.countOfOrders(email);
+            report.setDoneOrders(countedOfOrders);
+        }
+        if (usersService.findByEmail(email).get().getRole().equals(Role.CUSTOMER)) {
+            LocalDateTime creationDate = customerService.findByEmail(email).get().getRegistrationTime();
+            report.setCreationDate(creationDate);
+            Long countedOfOrders = orderService.countOfOrders(email);
+            report.setRequestOfOrders(countedOfOrders);
+        }
+        return report;
+    }
+
     public List<MainService> findAllMainService() {
         return mainServiceService.findAllMainService();
     }
+
     public List<SubService> findAllSubService() {
         return subServiceService.findAllSubService();
     }

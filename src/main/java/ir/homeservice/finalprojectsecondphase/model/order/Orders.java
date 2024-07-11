@@ -31,12 +31,8 @@ public class Orders extends BaseEntity<Long> {
 
     private LocalDateTime endTime;
 
-
-   // @NotNull(message = "Filling it is mandatory")
     private Long proposedPrice;
 
-
-    //@Pattern(regexp = "^[a-zA-Z ]{5,}$", message = "Invalid Description!")
     private String description;
 
 
