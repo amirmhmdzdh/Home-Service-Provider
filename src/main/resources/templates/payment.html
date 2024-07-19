@@ -20,7 +20,7 @@
         </header>
         <form method="post" id="balance" th:action="@{/customer/send-payment-info}" th:object="${dto}">
             <div>
-                must be paid : <span th:text="${dto.price}">$ </span>
+                must be paid : <span th:text="${dto.price}"></span>$
             </div>
 
             <div>

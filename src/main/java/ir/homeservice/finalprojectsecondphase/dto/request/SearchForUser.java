@@ -21,15 +21,14 @@ public class SearchForUser {
     private String lastName;
     private String email;
     private String subServiceName;
-
-    private Double star;
+    private Integer minRequestOfOrders;
+    private Integer maxRequestOfOrders;
+    private Integer minDoneOrders = 0;
+    private Integer maxDoneOrders = 0;
     private Double minScore;
     private Double maxScore;
-    private Long minCredit;
-    private Long maxCredit;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime minUserCreationAt;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime maxUserCreationAt;
-
 }

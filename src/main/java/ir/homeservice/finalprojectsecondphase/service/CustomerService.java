@@ -62,16 +62,12 @@ public class CustomerService {
     public Customer signUpCustomer(CustomerRequest customer) {
         Address address = Address.builder().province(customer.request().province()).city(customer.request().city())
                 .avenue(customer.request().avenue()).houseNumber(customer.request().houseNumber()).build();
+
         Customer insertCustomer = Customer.builder()
-                .firstName(customer.firstName())
-                .lastName(customer.lastName())
-                .email(customer.email())
-                .password(passwordEncoder.encode(customer.password()))
-                .registrationTime(LocalDateTime.now())
-                .credit(0L)
-                .role(Role.CUSTOMER)
-                .address(address)
-                .build();
+                .firstName(customer.firstName()).lastName(customer.lastName()).email(customer.email())
+                .password(passwordEncoder.encode(customer.password())).registrationTime(LocalDateTime.now())
+                .credit(0L).role(Role.CUSTOMER).address(address).requestOfOrders(0).build();
+
         if (customerRepository.findByEmail(customer.email()).isPresent())
             throw new DuplicateInformationException(customer.email() + " is duplicate");
         customerRepository.save(insertCustomer);
@@ -85,12 +81,12 @@ public class CustomerService {
                 .orElseThrow(() -> new NotFoundException("This customer does not exist!"));
     }
 
-    public Customer changePassword(UserChangePasswordRequest password, Long customerId) {
+    public void changePassword(UserChangePasswordRequest password, Long customerId) {
         if (!password.newPassword().equals(password.confirmNewPassword()))
             throw new NotFoundException("this confirmNewPassword not match with newPassword!");
         Customer customer = customerRepository.getReferenceById(customerId);
         customer.setPassword(passwordEncoder.encode(password.confirmNewPassword()));
-        return customerRepository.save(customer);
+        customerRepository.save(customer);
     }
 
     public Orders watchAndOrder(Long customerId, OrdersRequest request) {
@@ -101,11 +97,13 @@ public class CustomerService {
                         new NotFoundException("This subService does not exist!"));
         validation.validatePrice(subService, request);
         Orders orders = Orders.builder()
-                .description(request.description()).subServices(subService).orderStatus(OrderStatus.WAITING_FOR_SPECIALIST_SUGGESTION)
+                .description(request.description()).subServices(subService)
+                .orderStatus(OrderStatus.WAITING_FOR_SPECIALIST_SUGGESTION)
                 .executionTime(request.workStartDate()).endTime(request.workEndDate())
                 .customer(customer).address(customer.getAddress()).proposedPrice(request.proposedPrice())
                 .registrationTime(LocalDateTime.now()).build();
         validation.validateTime(orders);
+        customer.setRequestOfOrders(customer.getRequestOfOrders() + 1);
         return orderService.save(orders);
     }
 
@@ -151,7 +149,6 @@ public class CustomerService {
     }
 
     public Orders changeOrderStatusToDone(Long orderId, Customer customer) {
-        // Customer customer = customerRepository.getReferenceById(customerId);
         validation.checkOwnerOfTheOrder(orderId, customer);
         Orders order = orderService.findById(orderId)
                 .orElseThrow(() -> new NotFoundException("Order not found"));
@@ -178,6 +175,7 @@ public class CustomerService {
             double hourDelay = (double) minuteDelay / 60;
 
             Specialist specialist = offer.getSpecialist();
+            specialist.setDoneOrders(specialist.getDoneOrders() + 1);
             specialist.delay(hourDelay);
             specialistService.save(specialist);
         }
@@ -209,9 +207,9 @@ public class CustomerService {
     }
 
     private void accounting(Orders orders) {
-        orders.setOrderStatus(OrderStatus.PAID);
         Offer offer = orders.getOfferList().stream().filter(o ->
                 o.getOfferStatus().equals(OfferStatus.ACCEPTED)).findFirst().get();
+        orders.setOrderStatus(OrderStatus.PAID);
         orderService.save(orders);
         Long proposedPrice = offer.getProposedPrice();
         Specialist specialist = offer.getSpecialist();
@@ -305,11 +303,11 @@ public class CustomerService {
     }
 
     public List<FilterUserResponse> customerFilter(SearchForUser customerSearch) {
+        List<Predicate> predicateList = new ArrayList<>();
         List<FilterUserResponse> filterUserResponse = new ArrayList<>();
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
         CriteriaQuery<Customer> customerCriteriaQuery = criteriaBuilder.createQuery(Customer.class);
         Root<Customer> customerRoot = customerCriteriaQuery.from(Customer.class);
-        List<Predicate> predicateList = new ArrayList<>();
 
         Optional.ofNullable(customerSearch.getFirstName())
                 .map(firstname -> criteriaBuilder.equal(customerRoot.get("firstName"), firstname))
@@ -327,6 +325,7 @@ public class CustomerService {
                 .map(user -> criteriaBuilder.equal(customerRoot.get("role"), user))
                 .ifPresent(predicateList::add);
 
+
         if (customerSearch.getMinUserCreationAt() == null && customerSearch.getMaxUserCreationAt() != null) {
             customerSearch.setMinUserCreationAt(LocalDateTime.now().minusYears(1));
         }
@@ -338,7 +337,20 @@ public class CustomerService {
                     customerSearch.getMinUserCreationAt(), customerSearch.getMaxUserCreationAt()));
         }
 
-        customerCriteriaQuery.select(customerRoot).where(criteriaBuilder.or(predicateList.toArray(new Predicate[0])));
+
+        if (customerSearch.getMinRequestOfOrders() == 0 && customerSearch.getMaxRequestOfOrders() != 0) {
+            customerSearch.setMinRequestOfOrders(0);
+        }
+        if (customerSearch.getMinRequestOfOrders() != 0 && customerSearch.getMaxRequestOfOrders() == 0) {
+            customerSearch.setMaxRequestOfOrders(Integer.MAX_VALUE);
+        }
+        if (customerSearch.getMinRequestOfOrders() != 0 && customerSearch.getMaxRequestOfOrders() != 0) {
+            predicateList.add(criteriaBuilder.between(customerRoot.get("requestOfOrders"),
+                    customerSearch.getMinRequestOfOrders(), customerSearch.getMaxRequestOfOrders()));
+        }
+
+
+        customerCriteriaQuery.select(customerRoot).where(criteriaBuilder.and(predicateList.toArray(new Predicate[0])));
         List<Customer> resultList = entityManager.createQuery(customerCriteriaQuery).getResultList();
         resultList.forEach(customer -> filterUserResponse.add(CustomerMappers.convertToFilterDTO(customer)));
         return filterUserResponse;

@@ -23,20 +23,6 @@ public class UsersService {
                 )
         ));
     }
-
-
-//    private final UsersRepository usersRepository;
-//
-//
-//    public Optional<Users> findByEmail(String username) {
-//        return usersRepository.findByEmail(username);
-//    }
-//
-//    public Users signInAdmin(String email, String password) {
-//        return usersRepository.findByEmailAndPassword(email, password)
-//                .orElseThrow(() -> new NotFoundException("This admin does not exist!"));
-//    }
-
 }
 
 

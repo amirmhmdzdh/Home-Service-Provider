@@ -27,6 +27,9 @@ public class Specialist extends Users {
     private Long credit;
 
 
+    private Integer doneOrders;
+
+
     @Enumerated(value = EnumType.STRING)
     private SpecialistStatus status;
 

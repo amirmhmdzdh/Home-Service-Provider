@@ -14,6 +14,7 @@ public class CustomerMappers {
                 .lastname(customer.getLastName())
                 .email(customer.getEmail())
                 .credit(customer.getCredit())
+                .requestOfOrders(customer.getRequestOfOrders())
                 .userType(customer.getRole().name())
                 .userCreationDate(customer.getRegistrationTime())
                 .build();

@@ -106,6 +106,4 @@ public class SpecialistController {
         }
         return offerResponse;
     }
-
-
 }

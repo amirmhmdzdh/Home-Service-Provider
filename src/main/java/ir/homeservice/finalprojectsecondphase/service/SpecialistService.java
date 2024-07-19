@@ -3,7 +3,6 @@ package ir.homeservice.finalprojectsecondphase.service;
 import ir.homeservice.finalprojectsecondphase.dto.request.OfferRequest;
 import ir.homeservice.finalprojectsecondphase.dto.request.SearchForUser;
 import ir.homeservice.finalprojectsecondphase.dto.request.UserChangePasswordRequest;
-import ir.homeservice.finalprojectsecondphase.dto.response.FilterOrderResponseDTO;
 import ir.homeservice.finalprojectsecondphase.dto.response.FilterUserResponse;
 import ir.homeservice.finalprojectsecondphase.exception.*;
 import ir.homeservice.finalprojectsecondphase.mapper.SpecialistMappers;
@@ -25,7 +24,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -49,13 +47,13 @@ public class SpecialistService {
         if (specialistRepository.findByEmail(specialist.getEmail()).isPresent())
             throw new DuplicateInformationException("this Email already exist!");
         byte[] image = validation.checkImage(imagePath);
-        SaveImageToFile.saveImageToFile(image, "D:/test.jpg");
         Specialist specialist1 = Specialist.builder()
                 .firstName(specialist.getFirstName()).lastName(specialist.getLastName()).email(specialist.getEmail())
                 .status(SpecialistStatus.NEW).registrationTime(LocalDateTime.now()).image(image).credit(0L)
-                .password(passwordEncoder.encode(specialist.getPassword())).role(Role.SPECIALIST).star(0d)
+                .password(passwordEncoder.encode(specialist.getPassword())).role(Role.SPECIALIST).star(0d).doneOrders(0)
                 .build();
         specialistRepository.save(specialist1);
+        SaveImageToFile.saveImageToFile(image, "D:\\test.jpg");
         emailService.createEmail(specialist.getEmail());
         specialist1.setStatus(SpecialistStatus.AWAITING);
         return specialistRepository.save(specialist1);
@@ -66,17 +64,17 @@ public class SpecialistService {
                 .orElseThrow(() -> new NotFoundException("Specialist not found. "));
     }
 
-    public Specialist changePasswordSpecialist(UserChangePasswordRequest request, Long specialistId) {
+    public void changePasswordSpecialist(UserChangePasswordRequest request, Long specialistId) {
         if (!request.newPassword().equals(request.confirmNewPassword()))
             throw new NotFoundException("this confirmNewPassword not match with newPassword!");
         Specialist specialist = specialistRepository.getReferenceById(specialistId);
         specialist.setPassword(passwordEncoder.encode(request.confirmNewPassword()));
-        return save(specialist);
+        save(specialist);
     }
 
     public Offer newOffers(OfferRequest offerRequest, Long specialistId) {
         Optional<Specialist> specialistOptional = specialistRepository.findById(specialistId);
-         Specialist specialist = specialistOptional.get();
+        Specialist specialist = specialistOptional.get();
         if (!specialist.getStatus().equals(SpecialistStatus.CONFIRMED))
             throw new NotFoundException("the status of specialist is not CONFIRMED");
         Optional<Orders> ordersOptional = orderService.findById(offerRequest.orderId());
@@ -144,7 +142,6 @@ public class SpecialistService {
                     search.getMinUserCreationAt(), search.getMaxUserCreationAt()));
         }
 
-
         if (search.getMinScore() == null && search.getMaxScore() != null)
             search.setMinScore(0.0);
         if (search.getMinScore() != null && search.getMaxScore() == null)
@@ -153,25 +150,23 @@ public class SpecialistService {
             predicateList.add(criteriaBuilder.between(specialistRoot.get("star"),
                     search.getMinScore(), search.getMaxScore()));
 
+
+        if (search.getMinDoneOrders() == 0 && search.getMaxDoneOrders() != 0) {
+            search.setMinDoneOrders(0);
+        }
+        if (search.getMinDoneOrders() != 0 && search.getMaxDoneOrders() == 0) {
+            search.setMaxDoneOrders(Integer.MAX_VALUE);
+        }
+        if (search.getMinDoneOrders() != 0 && search.getMaxDoneOrders() != 0) {
+            predicateList.add(criteriaBuilder.between(specialistRoot.get("doneOrders"),
+                    search.getMinDoneOrders(), search.getMaxDoneOrders()));
+        }
+
         specialistCriteriaQuery.select(specialistRoot).where(criteriaBuilder.and(predicateList.toArray(new Predicate[0])));
         List<Specialist> resultList = entityManager.createQuery(specialistCriteriaQuery).getResultList();
         resultList.forEach(specialist -> filterUserResponse.add(SpecialistMappers.convertToFilterDTO(specialist)));
         return filterUserResponse;
     }
-
-
-//            if (search.getMinCredit() == 0 && search.getMaxCredit() != 0) {
-//            search.setMinCredit(0L);
-//        }
-//        if (search.getMinCredit() != 0 && search.getMaxCredit() == 0) {
-//            search.setMaxCredit(Long.MAX_VALUE);
-//        }
-//        if (search.getMinCredit() != 0 || search.getMaxCredit() != 0) {
-//            Predicate creditPredicate = criteriaBuilder.between(specialistRoot.get("credit"),
-//                    search.getMinCredit(), search.getMaxCredit());
-//            predicateList.add(creditPredicate);
-//        }
-
 
     public Double getSpecialistRate(Long specialistId) {
         Optional<Specialist> specialist = findById(specialistId);
@@ -193,8 +188,7 @@ public class SpecialistService {
     }
 
     public List<Offer> showAllOffersAccepted(OfferStatus status, Specialist specialist) {
-        List<Offer> offers = offerService.findOffersBySpecialistIdAndOfferStatus(specialist.getId(), status);
-        return offers;
+        return offerService.findOffersBySpecialistIdAndOfferStatus(specialist.getId(), status);
     }
 
 

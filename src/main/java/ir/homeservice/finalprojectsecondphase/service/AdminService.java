@@ -60,23 +60,13 @@ public class AdminService {
                     .build();
             return adminRepository.save(admin);
         }
-
         return null;
     }
-
-//    public Admin signInAdmin(String email,String password) {
-////       Admin admin1 = findByEmail(
-////                SecurityContextHolder.getContext().getAuthentication().getName()
-////        );
-//
-//        return adminRepository.findByEmailAndPassword(email, password)
-//                .orElseThrow(() -> new NotFoundException("This admin does not exist!"));
-//    }
-
 
     public MainService createMainService(MainService mainService) {
         if (mainServiceService.findByName(mainService.getName()).isPresent())
             throw new DuplicateInformationException("THIS " + mainService.getName() + " SERVICE ALREADY EXISTS! ");
+        mainService.setRegistrationTime(LocalDateTime.now());
         return mainServiceService.save(mainService);
     }
 
@@ -91,11 +81,9 @@ public class AdminService {
             throw new NotFoundException("this subService already exist!");
         MainService mainService1 = mainServiceOptional.get();
         SubService subService1 = SubService.builder()
-                .name(subService.getName())
-                .basePrice(subService.getBasePrice())
-                .description(subService.getDescription())
-                .mainService(mainService1)
-                .build();
+                .name(subService.getName()).basePrice(subService.getBasePrice())
+                .description(subService.getDescription()).registrationTime(LocalDateTime.now())
+                .mainService(mainService1).build();
         return subServiceService.save(subService1);
     }
 
@@ -105,9 +93,9 @@ public class AdminService {
             throw new NotFoundException("this subServices dose not exist!");
         SubService service = serviceServiceById.get();
         service.setName(updateSubService.getName());
-        service.setDescription(service.getDescription());
-        service.setBasePrice(service.getBasePrice());
-        return subServiceService.save(serviceServiceById.get());
+        service.setDescription(updateSubService.getDescription());
+        service.setBasePrice(updateSubService.getBasePrice());
+        return subServiceService.save(service);
     }
 
 

@@ -9,9 +9,13 @@ import ir.homeservice.finalprojectsecondphase.model.service.SubService;
 import ir.homeservice.finalprojectsecondphase.model.user.Customer;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.regex.Pattern;
 
+@SuppressWarnings("unused")
 @Component
 public class Validation {
 
@@ -52,13 +56,19 @@ public class Validation {
             throw new ImageFormatException("The image is empty!");
         }
 
-        if (!image.matches(".*\\.(jpg|jpeg)$"))
+        if (!image.matches(".*\\.(jpg|jpeg)$")) {
             throw new ImageFormatException("Invalid file format. Only JPG and JPEG formats are supported.");
-        byte[] imageBytes = image.getBytes();
+        }
+        byte[] imageBytes;
+        try {
+            imageBytes = Files.readAllBytes(Paths.get(image));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
-        if (!(imageBytes.length < 300 * 1024))
-            throw new ImageFormatException("The size of the image exceeds the limit!");
-
+        if (imageBytes.length > 300 * 1024) {
+            throw new NotFoundException("The size of the image exceeds the limit!");
+        }
         return imageBytes;
     }
 
@@ -109,5 +119,4 @@ public class Validation {
         }
         return true;
     }
-
 }

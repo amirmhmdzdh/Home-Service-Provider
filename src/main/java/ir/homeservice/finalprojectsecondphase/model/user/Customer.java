@@ -22,9 +22,10 @@ public class Customer extends Users {
     @NotNull(message = "Recharging the wallet is required!")
     private Long credit;
 
+    private Integer requestOfOrders;
+
     @OneToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     private Address address;
-
 
     @OneToMany(mappedBy = "customer",
             cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH},
@@ -32,4 +33,3 @@ public class Customer extends Users {
     @ToString.Exclude
     private List<Orders> ordersList;
 }
-

@@ -29,7 +29,6 @@ public class SecurityConfiguration {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(AbstractHttpConfigurer::disable)
-                //.logout(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(a -> a
                         .requestMatchers("/customer/register-Customer").permitAll()
                         .requestMatchers("/specialist/signUp-Specialist").permitAll()
@@ -46,15 +45,6 @@ public class SecurityConfiguration {
         ;
         return http.build();
     }
-
-//    @Autowired
-//    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-//        auth
-//                .userDetailsService(email -> userService
-//                        .findByEmail(email)
-//                        .orElseThrow(() -> new NotFoundException(String.format("This %s notFound!", email))))
-//                .passwordEncoder(passwordEncoder);
-//    }
 
     @Bean
     public UserDetailsService userDetailsService() {

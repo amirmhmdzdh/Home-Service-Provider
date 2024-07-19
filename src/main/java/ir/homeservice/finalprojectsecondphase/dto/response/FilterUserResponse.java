@@ -18,8 +18,10 @@ public class FilterUserResponse {
     private String lastname;
     private String email;
     private Long credit;
+    private Integer requestOfOrders;
+    private Integer doneOrders_JustForSpecialist;
     private String userType;
-    private String userStatus;
+    private String userStatus_JustForSpecialist;
     private LocalDateTime userCreationDate;
     private Double star_JustForSpecialist;
 }

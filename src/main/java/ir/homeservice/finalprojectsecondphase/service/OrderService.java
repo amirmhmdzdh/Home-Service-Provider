@@ -1,7 +1,6 @@
 package ir.homeservice.finalprojectsecondphase.service;
 
 import ir.homeservice.finalprojectsecondphase.dto.request.OrderHistoryDto;
-import ir.homeservice.finalprojectsecondphase.dto.response.FilterUserResponse;
 import ir.homeservice.finalprojectsecondphase.exception.NotFoundException;
 import ir.homeservice.finalprojectsecondphase.model.offer.Offer;
 import ir.homeservice.finalprojectsecondphase.model.offer.enums.OfferStatus;
@@ -18,7 +17,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -27,8 +25,9 @@ import java.util.Optional;
 @Transactional
 @RequiredArgsConstructor
 public class OrderService {
-    private final OrderRepository orderRepository;
+
     private final UsersService usersService;
+    private final OrderRepository orderRepository;
 
     public Orders chooseOffer(Orders orders, Long offerId) {
         orders.getOfferList().forEach(offer -> {
@@ -59,7 +58,8 @@ public class OrderService {
             Predicate predicate = cb.conjunction();
 
             if (dto.getStartDate() != null && dto.getEndDate() != null) {
-                predicate = cb.and(predicate, cb.between(root.get("executionTime"), dto.getStartDate(), dto.getEndDate()));
+                predicate = cb.and(predicate,
+                        cb.between(root.get("executionTime"), dto.getStartDate(), dto.getEndDate()));
             }
 
             if (dto.getStatus() != null) {
@@ -67,7 +67,8 @@ public class OrderService {
             }
 
             if (dto.getMainServiceName() != null) {
-                predicate = cb.and(predicate, cb.equal(root.get("subServices").get("mainService").get("name"), dto.getMainServiceName()));
+                predicate = cb.and(predicate,
+                        cb.equal(root.get("subServices").get("mainService").get("name"), dto.getMainServiceName()));
             }
 
             if (dto.getSubServiceName() != null) {
@@ -109,13 +110,8 @@ public class OrderService {
     public List<Orders> findAllBySpecialist(Specialist specialist, OrderStatus status) {
         if (orderRepository.findOrdersBySpecialist(specialist).isEmpty())
             throw new NotFoundException("THIS SPECIALIST DOESN'T HAVE ANY ORDER ! ");
-        return orderRepository.findOrdersBySpecialist(specialist)
-                .stream()
-                .filter(
-                        orders ->
-                                orders.getOrderStatus().equals(status)
-                )
+        return orderRepository.findOrdersBySpecialist(specialist).stream()
+                .filter(orders -> orders.getOrderStatus().equals(status))
                 .toList();
     }
-
 }

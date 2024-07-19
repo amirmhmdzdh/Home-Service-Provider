@@ -14,8 +14,9 @@ public class SpecialistMappers {
                 .lastname(specialist.getLastName())
                 .email(specialist.getEmail())
                 .credit(specialist.getCredit())
+                .doneOrders_JustForSpecialist(specialist.getDoneOrders())
                 .userType(specialist.getRole().name())
-                .userStatus(specialist.getStatus().name())
+                .userStatus_JustForSpecialist(specialist.getStatus().name())
                 .userCreationDate(specialist.getRegistrationTime())
                 .star_JustForSpecialist(specialist.getStar())
                 .build();

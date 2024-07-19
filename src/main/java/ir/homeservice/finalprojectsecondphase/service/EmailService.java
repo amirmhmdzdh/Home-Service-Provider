@@ -42,7 +42,7 @@ public class EmailService {
         confirmationTokenRepository.save(confirmationToken);
 
         SimpleMailMessage mailMessage = new SimpleMailMessage();
-        mailMessage.setFrom("Home");
+        mailMessage.setFrom("amir0mohammadzadeh@gmail.com");
         mailMessage.setTo(emailAddress);
         mailMessage.setSubject("Complete Registration!");
         mailMessage.setText("Hi " + users.get().getLastName() + "\n To confirm your account, please click here : "
