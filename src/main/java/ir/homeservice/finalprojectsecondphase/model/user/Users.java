@@ -18,7 +18,6 @@ import java.util.List;
 @AllArgsConstructor
 @ToString
 @Inheritance(strategy = InheritanceType.JOINED)
-//@MappedSuperclass
 @SuperBuilder
 @Entity
 public class Users extends BaseEntity<Long> implements UserDetails {
