@@ -21,17 +21,17 @@ public class PaymentRequest {
     @NotNull
     String hidden;
     @NotNull
-    @Pattern(regexp = "[0-9]{13}(?:[0-9]{3})?$",message = "card number must be 16 digit")
+    @Pattern(regexp = "[0-9]{13}(?:[0-9]{3})?$", message = "card number must be 16 digit")
     String number;
     @NotNull
-    @Pattern(regexp = "^[a-zA-Z]*$",message = "please check your name . you can't enter space or digit")
+    @Pattern(regexp = "^[a-zA-Z]*$", message = "please check your name . you can't enter space or digit")
     String name;
-   @Pattern(regexp = "\\b\\d{3}\\b",message = "your cvc must be 3 digit")
+    @Pattern(regexp = "\\b\\d{3}\\b", message = "your cvc must be 3 digit")
     String cvc;
     @NotNull
-    String year;
+    int year;
     @NotNull
-    String month;
+    int month;
     @Valid
     CustomerIdOrderId customerIdOrderId;
 }

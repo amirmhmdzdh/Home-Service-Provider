@@ -21,9 +21,6 @@ public class OfferService {
         return offerRepository.save(offer);
     }
 
-    public List<Offer> findAll() {
-        return offerRepository.findAll();
-    }
 
     public Optional<Offer> findById(Long id) {
         return offerRepository.findById(id);

@@ -30,10 +30,4 @@ public class MainServiceService {
             throw new MainServicesIsExistException("there are no main main service!");
         return mainServiceList;
     }
-
-    public MainService getReferenceById(Long id) {
-        return mainServiceRepository.getReferenceById(id);
-    }
-
-
 }

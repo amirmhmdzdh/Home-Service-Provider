@@ -110,12 +110,12 @@ public class Validation {
         if (!dto.getCaptcha().equals(dto.getHidden())) {
             throw new NotFoundException("wrong captcha");
         }
-        if (Integer.parseInt(dto.getYear()) < LocalDateTime.now().getYear()) {
-            throw new TimeException("expired card ");
+        if (dto.getYear() < LocalDateTime.now().getYear()) {
+            throw new TimeException("expired card year ");
         }
-        if (Integer.parseInt(dto.getYear()) == LocalDateTime.now().getYear() &&
-                Integer.parseInt(dto.getMonth()) < LocalDateTime.now().getMonth().getValue()) {
-            throw new TimeException("expired card ");
+        if (dto.getYear() == LocalDateTime.now().getYear() &&
+                dto.getMonth() < LocalDateTime.now().getMonth().getValue()) {
+            throw new TimeException("expired card month ");
         }
         return true;
     }

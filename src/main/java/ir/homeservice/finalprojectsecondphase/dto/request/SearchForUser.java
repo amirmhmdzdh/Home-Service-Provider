@@ -21,10 +21,11 @@ public class SearchForUser {
     private String lastName;
     private String email;
     private String subServiceName;
+    private String orderStatus;
     private Integer minRequestOfOrders;
     private Integer maxRequestOfOrders;
-    private Integer minDoneOrders = 0;
-    private Integer maxDoneOrders = 0;
+    private Integer minDoneOrders;
+    private Integer maxDoneOrders;
     private Double minScore;
     private Double maxScore;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

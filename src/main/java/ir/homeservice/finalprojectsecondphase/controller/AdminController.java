@@ -136,10 +136,4 @@ public class AdminController {
     public List<Orders> getHistoryOfOrdersForUser(@RequestBody OrderHistoryDto dto) {
         return adminService.getHistoryOfOrdersForUser(dto);
     }
-
-    @GetMapping("/reporting-from-users")
-    public ReportDto reportingFromUsers(@RequestParam String email) {
-        return adminService.reportingFromUsers(email);
-    }
-
 }

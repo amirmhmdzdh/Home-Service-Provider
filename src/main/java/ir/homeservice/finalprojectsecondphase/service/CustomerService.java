@@ -2,7 +2,7 @@ package ir.homeservice.finalprojectsecondphase.service;
 
 import cn.apiclub.captcha.Captcha;
 import ir.homeservice.finalprojectsecondphase.dto.CustomerIdOrderId;
-import ir.homeservice.finalprojectsecondphase.dto.PaymentPageDTO;
+import ir.homeservice.finalprojectsecondphase.dto.PaymentPageInfo;
 import ir.homeservice.finalprojectsecondphase.dto.request.*;
 import ir.homeservice.finalprojectsecondphase.dto.response.FilterUserResponse;
 import ir.homeservice.finalprojectsecondphase.exception.*;
@@ -43,6 +43,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional
+@SuppressWarnings("unused")
 @RequiredArgsConstructor
 public class CustomerService {
     private final Validation validation;
@@ -193,7 +194,8 @@ public class CustomerService {
                 .orElseThrow(() -> new NotFoundException("order not Exist!"));
         Long customerCredit = customer.getCredit();
         Offer offer = orders.getOfferList().stream()
-                .filter(o -> o.getOfferStatus().equals(OfferStatus.ACCEPTED)).findFirst().get();
+                .filter(o -> o.getOfferStatus().equals(OfferStatus.ACCEPTED))
+                .findFirst().get();
         Long offerProposedPrice = offer.getProposedPrice();
 
         if (customerCredit < offerProposedPrice) {
@@ -222,12 +224,12 @@ public class CustomerService {
         Orders orders = orderService.findById(orderId)
                 .orElseThrow(() -> new NotFoundException("order not Exist!"));
         validation.checkOwnerOfTheOrder(orders.getId(), customer);
-        PaymentPageDTO paymentPageDTO = new PaymentPageDTO();
+        PaymentPageInfo paymentPageInfo = new PaymentPageInfo();
         CustomerIdOrderId customerIdOrderId = new CustomerIdOrderId(orders.getId(), customer.getId());
-        paymentPageDTO.setCustomerIdOrderId(customerIdOrderId);
-        paymentPageDTO.setPrice(paymentPriceCalculator(orders.getId()));
-        setupCaptcha(paymentPageDTO);
-        model.addAttribute("dto", paymentPageDTO);
+        paymentPageInfo.setCustomerIdOrderId(customerIdOrderId);
+        paymentPageInfo.setPrice(paymentPriceCalculator(orders.getId()));
+        setupCaptcha(paymentPageInfo);
+        model.addAttribute("dto", paymentPageInfo);
         return new ModelAndView("payment");
     }
 
@@ -243,21 +245,22 @@ public class CustomerService {
                         "This order has not yet reached the payment stage, this order is in the " +
                                 orderStatus + " stage!");
         }
-        Offer offer = order.get().getOfferList().stream().
-                filter(o -> o.getOfferStatus().equals(OfferStatus.ACCEPTED)).findFirst().get();
+        Offer acceptedOffer = order.get().getOfferList().stream().
+                filter(o -> o.getOfferStatus().equals(OfferStatus.ACCEPTED))
+                .findFirst()
+                .orElseThrow(() -> new NotFoundException("No accepted offer found for this order"));
 
-        return offer.getProposedPrice();
+        return acceptedOffer.getProposedPrice();
     }
 
-
-    private void setupCaptcha(PaymentPageDTO dto) {
+    private void setupCaptcha(PaymentPageInfo dto) {
         Captcha captcha = CaptchaUtil.createCaptcha(350, 100);
         dto.setHidden(captcha.getAnswer());
         dto.setCaptcha("");
         dto.setImage(CaptchaUtil.encodeBase64(captcha));
     }
 
-    public Customer changeOrderStatusToPaidByOnlinePayment(CustomerIdOrderId dto) {
+    public Customer getInfoPaidByOnlinePayment(CustomerIdOrderId dto) {
         Optional<Customer> customer = customerRepository.findById(dto.getCustomerId());
         if (customer.isEmpty())
             throw new NotFoundException("not found user");
@@ -291,11 +294,8 @@ public class CustomerService {
             specialistService.save(specialist);
         }
         comment = Comment.builder()
-                .orders(orders.get())
-                .textComment(request.textComment())
-                .star(request.star())
-                .registrationTime(LocalDateTime.now())
-                .build();
+                .orders(orders.get()).textComment(request.textComment())
+                .star(request.star()).registrationTime(LocalDateTime.now()).build();
         commentService.save(comment);
         orders.get().setComment(comment);
         orderService.save(orders.get());
@@ -326,31 +326,21 @@ public class CustomerService {
                 .ifPresent(predicateList::add);
 
 
-        if (customerSearch.getMinUserCreationAt() == null && customerSearch.getMaxUserCreationAt() != null) {
-            customerSearch.setMinUserCreationAt(LocalDateTime.now().minusYears(1));
-        }
-        if (customerSearch.getMinUserCreationAt() != null && customerSearch.getMaxUserCreationAt() == null) {
-            customerSearch.setMaxUserCreationAt(LocalDateTime.now());
-        }
-        if (customerSearch.getMinUserCreationAt() != null && customerSearch.getMaxUserCreationAt() != null) {
-            predicateList.add(criteriaBuilder.between(customerRoot.get("registrationTime"),
-                    customerSearch.getMinUserCreationAt(), customerSearch.getMaxUserCreationAt()));
-        }
+        Optional.ofNullable(customerSearch.getMinUserCreationAt())
+                .flatMap(minCreationAt -> Optional.ofNullable(customerSearch.getMaxUserCreationAt())
+                        .map(maxCreationAt ->
+                                criteriaBuilder.between(customerRoot.get("registrationTime"),
+                                        minCreationAt, maxCreationAt)))
+                .ifPresent(predicateList::add);
 
 
-        if (customerSearch.getMinRequestOfOrders() == 0 && customerSearch.getMaxRequestOfOrders() != 0) {
-            customerSearch.setMinRequestOfOrders(0);
-        }
-        if (customerSearch.getMinRequestOfOrders() != 0 && customerSearch.getMaxRequestOfOrders() == 0) {
-            customerSearch.setMaxRequestOfOrders(Integer.MAX_VALUE);
-        }
-        if (customerSearch.getMinRequestOfOrders() != 0 && customerSearch.getMaxRequestOfOrders() != 0) {
-            predicateList.add(criteriaBuilder.between(customerRoot.get("requestOfOrders"),
-                    customerSearch.getMinRequestOfOrders(), customerSearch.getMaxRequestOfOrders()));
-        }
+        Optional.ofNullable(customerSearch.getMinRequestOfOrders())
+                .flatMap(minRequestOfOrders -> Optional.ofNullable(customerSearch.getMaxRequestOfOrders())
+                        .map(maxRequestOfOrders ->
+                                criteriaBuilder.between(customerRoot.get("requestOfOrders"), minRequestOfOrders, maxRequestOfOrders)))
+                .ifPresent(predicateList::add);
 
-
-        customerCriteriaQuery.select(customerRoot).where(criteriaBuilder.and(predicateList.toArray(new Predicate[0])));
+        customerCriteriaQuery.select(customerRoot).where(criteriaBuilder.or(predicateList.toArray(new Predicate[0])));
         List<Customer> resultList = entityManager.createQuery(customerCriteriaQuery).getResultList();
         resultList.forEach(customer -> filterUserResponse.add(CustomerMappers.convertToFilterDTO(customer)));
         return filterUserResponse;

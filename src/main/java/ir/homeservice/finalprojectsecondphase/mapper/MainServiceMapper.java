@@ -4,8 +4,6 @@ import ir.homeservice.finalprojectsecondphase.dto.request.MainServiceRequest;
 import ir.homeservice.finalprojectsecondphase.dto.response.MainServiceResponse;
 import ir.homeservice.finalprojectsecondphase.model.service.MainService;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.Mappings;
 import org.mapstruct.factory.Mappers;
 
 @Mapper

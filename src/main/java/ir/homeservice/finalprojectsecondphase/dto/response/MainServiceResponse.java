@@ -3,7 +3,6 @@ package ir.homeservice.finalprojectsecondphase.dto.response;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
-import java.io.Serializable;
 import java.util.List;
 
 @Data

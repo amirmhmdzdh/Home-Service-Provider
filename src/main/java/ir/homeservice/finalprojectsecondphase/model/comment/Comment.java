@@ -3,7 +3,6 @@ package ir.homeservice.finalprojectsecondphase.model.comment;
 import ir.homeservice.finalprojectsecondphase.model.baseentity.BaseEntity;
 import ir.homeservice.finalprojectsecondphase.model.order.Orders;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -16,7 +15,6 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 public class Comment extends BaseEntity<Long> {
 
-    //@NotNull(message = "Filling it is mandatory")
     private Double star;
 
     private String textComment;

@@ -31,20 +31,16 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/specialist")
 public class SpecialistController {
-    private final SpecialistService specialistService;
     private final ModelMapper modelMapper;
+    private final SpecialistService specialistService;
 
     @PostMapping("/signUp-Specialist")
     public ResponseEntity<SpecialistResponseRegister> signUp
             (@Valid @RequestBody SpecialistRegisterRequest request, String image) {
-
         Specialist model = SpecialistMapper.INSTANCE.registerSpecialistToModel(request);
-
         Specialist specialist = specialistService.signUpSpecialist(model, image);
-
         SpecialistResponseRegister specialistResponseRegister = modelMapper
                 .map(specialist, SpecialistResponseRegister.class);
-
         return new ResponseEntity<>(specialistResponseRegister, HttpStatus.CREATED);
     }
 
@@ -60,24 +56,20 @@ public class SpecialistController {
     @PostMapping("/add-Offer-for-order")
     public ResponseEntity<OfferResponse> addOfferForOrder
             (@Valid @RequestBody OfferRequest request, Authentication authentication) {
-
         OfferMapper.INSTANCE.offerSaveRequestToModel(request);
-
         Offer offer = specialistService.newOffers(request, ((Users) authentication.getPrincipal()).getId());
-
         OfferResponse map = modelMapper.map(offer, OfferResponse.class);
-
         return new ResponseEntity<>(map, HttpStatus.CREATED);
     }
 
     @GetMapping("/show-specialist-star")
-    public Double viewWorkerRate(Authentication authentication) {
+    public Double showWorkerRate(Authentication authentication) {
         Specialist specialist = (Specialist) authentication.getPrincipal();
         return specialistService.getSpecialistRate(specialist.getId());
     }
 
     @GetMapping("/show-specialist-credit")
-    public Long viewWorkerCredit(Authentication authentication) {
+    public Long showWorkerCredit(Authentication authentication) {
         Specialist specialist = (Specialist) authentication.getPrincipal();
         return specialistService.getSpecialistCredit(specialist.getId());
     }
@@ -90,18 +82,13 @@ public class SpecialistController {
     }
 
     @GetMapping("/show-all-offers-accepted")
-    public List<OfferResponseDTO> viewAllAcceptedOffers
+    public List<OfferResponseDTO> showAllAcceptedOffers
             (@RequestParam(required = false) OfferStatus status, Authentication authentication) {
         Specialist specialist = (Specialist) authentication.getPrincipal();
-
         List<Offer> offers = specialistService.showAllOffersAccepted(status, specialist);
-
         List<OfferResponseDTO> offerResponse = new ArrayList<>();
-
         for (Offer offer : offers) {
-
             OfferResponseDTO map = modelMapper.map(offer, OfferResponseDTO.class);
-
             offerResponse.add(map);
         }
         return offerResponse;

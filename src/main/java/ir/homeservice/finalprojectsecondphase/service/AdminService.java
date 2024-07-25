@@ -4,7 +4,6 @@ import ir.homeservice.finalprojectsecondphase.dto.request.AdminRegisterRequest;
 import ir.homeservice.finalprojectsecondphase.dto.request.OrderHistoryDto;
 import ir.homeservice.finalprojectsecondphase.dto.request.SearchForUser;
 import ir.homeservice.finalprojectsecondphase.dto.response.FilterUserResponse;
-import ir.homeservice.finalprojectsecondphase.dto.response.ReportDto;
 import ir.homeservice.finalprojectsecondphase.exception.*;
 import ir.homeservice.finalprojectsecondphase.model.order.Orders;
 import ir.homeservice.finalprojectsecondphase.model.service.MainService;
@@ -30,7 +29,6 @@ import java.util.Optional;
 
 public class AdminService {
     private final OrderService orderService;
-    private final UsersService usersService;
     private final CustomerService customerService;
     private final AdminRepository adminRepository;
     private final SpecialistService specialistService;
@@ -48,19 +46,12 @@ public class AdminService {
     }
 
     public Admin saveAdmin(AdminRegisterRequest request) {
-        if (!adminRepository.existsByEmail(request.email())) {
-            Admin admin = Admin.builder()
-                    .firstName(request.firstName())
-                    .lastName(request.lastName())
-                    .email(request.email())
-                    .role(Role.ADMIN)
-                    .isActive(true)
-                    .password(passwordEncoder.encode(request.password()))
-                    .registrationTime(LocalDateTime.now())
-                    .build();
-            return adminRepository.save(admin);
-        }
-        return null;
+        if (adminRepository.findByEmail(request.email()).isPresent())
+            throw new DuplicateInformationException(" email is duplicate");
+        return Admin.builder()
+                .firstName(request.firstName()).lastName(request.lastName()).email(request.email())
+                .role(Role.ADMIN).isActive(true).password(passwordEncoder.encode(request.password()))
+                .registrationTime(LocalDateTime.now()).build();
     }
 
     public MainService createMainService(MainService mainService) {
@@ -88,10 +79,10 @@ public class AdminService {
     }
 
     public SubService updateSubService(SubService updateSubService) {
-        Optional<SubService> serviceServiceById = subServiceService.findById(updateSubService.getId());
-        if (serviceServiceById.isEmpty())
+        Optional<SubService> subService = subServiceService.findById(updateSubService.getId());
+        if (subService.isEmpty())
             throw new NotFoundException("this subServices dose not exist!");
-        SubService service = serviceServiceById.get();
+        SubService service = subService.get();
         service.setName(updateSubService.getName());
         service.setDescription(updateSubService.getDescription());
         service.setBasePrice(updateSubService.getBasePrice());
@@ -150,23 +141,6 @@ public class AdminService {
 
     public List<Orders> getHistoryOfOrdersForUser(OrderHistoryDto dto) {
         return orderService.historyOfOrdersForUser(dto);
-    }
-
-    public ReportDto reportingFromUsers(String email) {
-        ReportDto report = new ReportDto();
-        if (usersService.findByEmail(email).get().getRole().equals(Role.SPECIALIST)) {
-            LocalDateTime creationDate = specialistService.findByEmail(email).get().getRegistrationTime();
-            report.setCreationDate(creationDate);
-            Long countedOfOrders = orderService.countOfOrders(email);
-            report.setDoneOrders(countedOfOrders);
-        }
-        if (usersService.findByEmail(email).get().getRole().equals(Role.CUSTOMER)) {
-            LocalDateTime creationDate = customerService.findByEmail(email).get().getRegistrationTime();
-            report.setCreationDate(creationDate);
-            Long countedOfOrders = orderService.countOfOrders(email);
-            report.setRequestOfOrders(countedOfOrders);
-        }
-        return report;
     }
 
     public List<MainService> findAllMainService() {

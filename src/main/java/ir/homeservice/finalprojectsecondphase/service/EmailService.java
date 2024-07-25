@@ -5,7 +5,7 @@ import ir.homeservice.finalprojectsecondphase.model.user.ConfirmationToken;
 import ir.homeservice.finalprojectsecondphase.model.user.Users;
 import ir.homeservice.finalprojectsecondphase.repository.ConfirmationTokenRepository;
 import ir.homeservice.finalprojectsecondphase.repository.UsersRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
@@ -13,21 +13,13 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
-@Service("emailService")
+@Service
+@RequiredArgsConstructor
 public class EmailService {
     private final UsersService usersService;
     private final JavaMailSender javaMailSender;
     private final UsersRepository usersRepository;
     private final ConfirmationTokenRepository confirmationTokenRepository;
-
-
-    @Autowired
-    public EmailService(UsersService usersService, JavaMailSender javaMailSender, UsersRepository usersRepository, ConfirmationTokenRepository confirmationTokenRepository) {
-        this.usersService = usersService;
-        this.javaMailSender = javaMailSender;
-        this.usersRepository = usersRepository;
-        this.confirmationTokenRepository = confirmationTokenRepository;
-    }
 
     @Async
     public void createEmail(SimpleMailMessage email) {
@@ -42,7 +34,7 @@ public class EmailService {
         confirmationTokenRepository.save(confirmationToken);
 
         SimpleMailMessage mailMessage = new SimpleMailMessage();
-        mailMessage.setFrom("amir0mohammadzadeh@gmail.com");
+        mailMessage.setFrom("mktbsharif@gmail.com");
         mailMessage.setTo(emailAddress);
         mailMessage.setSubject("Complete Registration!");
         mailMessage.setText("Hi " + users.get().getLastName() + "\n To confirm your account, please click here : "

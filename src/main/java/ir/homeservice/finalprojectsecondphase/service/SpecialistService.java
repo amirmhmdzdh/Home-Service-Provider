@@ -32,6 +32,7 @@ import java.util.Optional;
 
 @Service
 @Transactional
+@SuppressWarnings("unused")
 @RequiredArgsConstructor
 public class SpecialistService {
     @PersistenceContext
@@ -111,7 +112,7 @@ public class SpecialistService {
         Join<Specialist, SubService> subServiceJoin = specialistRoot.join("subServicesList");
 
         specialistCriteriaQuery.select(specialistRoot)
-                .where(criteriaBuilder.like(subServiceJoin.get("name"), "%" + search.getSubServiceName() + "%"));
+                .where(criteriaBuilder.like(subServiceJoin.get("name"), search.getSubServiceName()));
 
 
         Optional.ofNullable(search.getFirstName())
@@ -131,36 +132,24 @@ public class SpecialistService {
                 .map(userStatus -> criteriaBuilder.equal(specialistRoot.get("userStatus"), userStatus))
                 .ifPresent(predicateList::add);
 
-        if (search.getMinUserCreationAt() == null && search.getMaxUserCreationAt() != null) {
-            search.setMinUserCreationAt(LocalDateTime.now().minusYears(1));
-        }
-        if (search.getMinUserCreationAt() != null && search.getMaxUserCreationAt() == null) {
-            search.setMaxUserCreationAt(LocalDateTime.now());
-        }
-        if (search.getMinUserCreationAt() != null && search.getMaxUserCreationAt() != null) {
-            predicateList.add(criteriaBuilder.between(specialistRoot.get("registrationTime"),
-                    search.getMinUserCreationAt(), search.getMaxUserCreationAt()));
-        }
 
-        if (search.getMinScore() == null && search.getMaxScore() != null)
-            search.setMinScore(0.0);
-        if (search.getMinScore() != null && search.getMaxScore() == null)
-            search.setMaxScore(5.0);
-        if (search.getMinScore() != null && search.getMaxScore() != null)
-            predicateList.add(criteriaBuilder.between(specialistRoot.get("star"),
-                    search.getMinScore(), search.getMaxScore()));
+        Optional.ofNullable(search.getMinUserCreationAt())
+                .flatMap(minCreationAt -> Optional.ofNullable(search.getMaxUserCreationAt())
+                        .map(maxCreationAt -> criteriaBuilder.between(specialistRoot.get("registrationTime"),
+                                minCreationAt, maxCreationAt)))
+                .ifPresent(predicateList::add);
+
+        Optional.ofNullable(search.getMinScore())
+                .flatMap(minScore -> Optional.ofNullable(search.getMaxScore())
+                        .map(maxScore -> criteriaBuilder.between(specialistRoot.get("star"), minScore, maxScore)))
+                .ifPresent(predicateList::add);
 
 
-        if (search.getMinDoneOrders() == 0 && search.getMaxDoneOrders() != 0) {
-            search.setMinDoneOrders(0);
-        }
-        if (search.getMinDoneOrders() != 0 && search.getMaxDoneOrders() == 0) {
-            search.setMaxDoneOrders(Integer.MAX_VALUE);
-        }
-        if (search.getMinDoneOrders() != 0 && search.getMaxDoneOrders() != 0) {
-            predicateList.add(criteriaBuilder.between(specialistRoot.get("doneOrders"),
-                    search.getMinDoneOrders(), search.getMaxDoneOrders()));
-        }
+        Optional.ofNullable(search.getMinDoneOrders())
+                .flatMap(minDoneOrders -> Optional.ofNullable(search.getMaxDoneOrders())
+                        .map(maxDoneOrders -> criteriaBuilder.between(specialistRoot.get("doneOrders"),
+                                minDoneOrders, maxDoneOrders)))
+                .ifPresent(predicateList::add);
 
         specialistCriteriaQuery.select(specialistRoot).where(criteriaBuilder.and(predicateList.toArray(new Predicate[0])));
         List<Specialist> resultList = entityManager.createQuery(specialistCriteriaQuery).getResultList();
@@ -183,11 +172,14 @@ public class SpecialistService {
     }
 
     public List<Orders> findAllOrdersBySpecialist(OrderStatus status, Specialist specialist) {
-        if (status == null) throw new NotFoundException("STATUS IS REQUIRED");
+        if (status == null)
+            throw new NotFoundException("STATUS IS REQUIRED");
         return orderService.findAllBySpecialist(specialist, status);
     }
 
     public List<Offer> showAllOffersAccepted(OfferStatus status, Specialist specialist) {
+        if (status == null)
+            throw new NotFoundException("STATUS IS REQUIRED");
         return offerService.findOffersBySpecialistIdAndOfferStatus(specialist.getId(), status);
     }
 

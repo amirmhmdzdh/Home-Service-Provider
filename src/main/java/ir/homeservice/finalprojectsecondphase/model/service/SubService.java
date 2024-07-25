@@ -18,15 +18,12 @@ import java.util.List;
 @SuperBuilder
 public class SubService extends BaseEntity<Long> {
 
-   // @Pattern(regexp = "^[a-zA-Z ]{3,}$", message = "Invalid name!")
     @Column(unique = true)
     private String name;
 
-   // @NotNull(message = "Filling it is mandatory")
     private Long basePrice;
 
 
-   // @Pattern(regexp = "^[a-zA-Z ]{5,}$", message = "Invalid Description!")
     private String description;
 
     @ManyToOne
@@ -41,11 +38,4 @@ public class SubService extends BaseEntity<Long> {
             cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH}, fetch = FetchType.EAGER)
     @ToString.Exclude
     private List<Orders> ordersList;
-
-    public SubService(String name, Long basePrice, String description, MainService mainService) {
-        this.name = name;
-        this.basePrice = basePrice;
-        this.description = description;
-        this.mainService = mainService;
-    }
 }
