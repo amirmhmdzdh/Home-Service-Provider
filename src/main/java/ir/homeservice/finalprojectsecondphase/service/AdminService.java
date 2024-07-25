@@ -48,10 +48,11 @@ public class AdminService {
     public Admin saveAdmin(AdminRegisterRequest request) {
         if (adminRepository.findByEmail(request.email()).isPresent())
             throw new DuplicateInformationException(" email is duplicate");
-        return Admin.builder()
+        Admin admin = Admin.builder()
                 .firstName(request.firstName()).lastName(request.lastName()).email(request.email())
                 .role(Role.ADMIN).isActive(true).password(passwordEncoder.encode(request.password()))
                 .registrationTime(LocalDateTime.now()).build();
+        return adminRepository.save(admin);
     }
 
     public MainService createMainService(MainService mainService) {
